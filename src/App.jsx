@@ -226,7 +226,7 @@ export default function App() {
   ];
 
   return (
-    <div className="app">
+    <div className={`app ${hasEntered ? 'site-entered' : 'site-hidden'}`}>
       <WelcomeScreen onEnter={() => setHasEntered(true)} />
       {/* Top Scroll Progress Indicator */}
       <div className="scroll-progress" style={{ width: `${scrollWidth}%` }}></div>

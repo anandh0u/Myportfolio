@@ -20,94 +20,195 @@ export default function FlowingBackground() {
     }
     window.addEventListener('resize', handleResize)
 
-    // Wave parameters
-    const waves = [
-      {
-        y: 0.5,
-        length: 0.0012,
-        amplitude: 130,
-        speed: 0.006,
-        color: 'rgba(0, 240, 255, 0.11)', // Neon Cyan
-        lineWidth: 1.5,
-        phase: 0,
-      },
-      {
-        y: 0.55,
-        length: 0.0008,
-        amplitude: 180,
-        speed: 0.004,
-        color: 'rgba(255, 0, 127, 0.09)', // Neon Pink
-        lineWidth: 1.2,
-        phase: Math.PI / 4,
-      },
-      {
-        y: 0.45,
-        length: 0.0018,
-        amplitude: 90,
-        speed: 0.009,
-        color: 'rgba(0, 240, 255, 0.05)', // Neon Cyan subtle
-        lineWidth: 2.0,
-        phase: Math.PI / 2,
-      },
-      {
-        y: 0.52,
-        length: 0.0006,
-        amplitude: 220,
-        speed: 0.003,
-        color: 'rgba(255, 0, 127, 0.07)', // Neon Pink subtle
-        lineWidth: 1.0,
-        phase: Math.PI * 1.2,
-      },
+    // Sakura colors (various soft pinks and blushes)
+    const COLORS = [
+      'rgba(255, 183, 197, 0.85)', // Cherry Pink
+      'rgba(255, 166, 201, 0.80)', // Bright Blossom Pink
+      'rgba(255, 204, 213, 0.90)', // Soft White-Pink
+      'rgba(255, 105, 180, 0.75)', // Hot Pink highlight
+      'rgba(244, 154, 193, 0.85)'  // Classic Sakura
     ]
 
-    // Track mouse position for subtle interactive influence
-    let mouse = { x: undefined, y: undefined }
-    const handleMouseMove = (e) => {
-      mouse.x = e.clientX
-      mouse.y = e.clientY
-    }
-    window.addEventListener('mousemove', handleMouseMove)
+    // Petal configuration
+    const maxPetals = 70
+    const petals = []
 
-    // Animation loop
-    const animate = () => {
-      // Clear canvas
-      ctx.clearRect(0, 0, width, height)
+    class Petal {
+      constructor() {
+        this.reset(true)
+      }
 
-      // Draw waves
-      waves.forEach((wave) => {
-        ctx.beginPath()
-        ctx.strokeStyle = wave.color
-        ctx.lineWidth = wave.lineWidth
+      reset(initiallyOnScreen = false) {
+        // Position
+        this.x = initiallyOnScreen ? Math.random() * width : -30
+        this.y = Math.random() * height
+        
+        // Size
+        this.size = Math.random() * 8 + 6
+        
+        // Velocities
+        this.vx = Math.random() * 2 + 2.5 // Base movement from left to right
+        this.vy = Math.random() * 0.8 + 0.4 // Soft downward fall
+        
+        // 3D Flipped states
+        this.rotation = Math.random() * Math.PI * 2
+        this.rotationSpeed = (Math.random() - 0.5) * 0.03
+        this.tilt = Math.random()
+        this.tiltAngle = Math.random() * Math.PI
+        this.tiltSpeed = Math.random() * 0.02 + 0.01
+        
+        // Sine wave swing (oscillation in the wind)
+        this.oscillationAngle = Math.random() * Math.PI
+        this.oscillationSpeed = Math.random() * 0.015 + 0.005
+        this.oscillationDistance = Math.random() * 1.5 + 0.5
+        
+        this.color = COLORS[Math.floor(Math.random() * COLORS.length)]
+      }
 
-        const baseHeight = height * wave.y
+      update(mouse, mouseVelocity) {
+        // Wind drift calculations
+        this.x += this.vx + Math.sin(this.oscillationAngle) * this.oscillationDistance
+        this.y += this.vy
+        
+        // Angles update
+        this.rotation += this.rotationSpeed
+        this.tiltAngle += this.tiltSpeed
+        this.tilt = Math.sin(this.tiltAngle) * 0.8 // Fluctuates between -0.8 and 0.8 (3D flip effect)
+        this.oscillationAngle += this.oscillationSpeed
 
-        for (let x = 0; x < width; x += 2) {
-          // Normal sinusoidal wave calculation
-          let yOffset = Math.sin(x * wave.length + wave.phase) * wave.amplitude
-          // Add a second harmonic to make it look organic
-          yOffset += Math.cos(x * wave.length * 0.5 - wave.phase * 0.7) * (wave.amplitude * 0.4)
-
-          // Subtly attract waves towards mouse position
-          if (mouse.x !== undefined && mouse.y !== undefined) {
-            const dx = x - mouse.x
-            const dy = (baseHeight + yOffset) - mouse.y
-            const dist = Math.sqrt(dx * dx + dy * dy)
-            if (dist < 300) {
-              const force = (300 - dist) / 300
-              yOffset += (mouse.y - (baseHeight + yOffset)) * force * 0.12
-            }
-          }
-
-          if (x === 0) {
-            ctx.moveTo(x, baseHeight + yOffset)
-          } else {
-            ctx.lineTo(x, baseHeight + yOffset)
+        // Mouse interaction: create a wind swirl if the cursor is close and moving
+        if (mouse.x !== undefined && mouse.y !== undefined) {
+          const dx = this.x - mouse.x
+          const dy = this.y - mouse.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          
+          if (dist < 180) {
+            const force = (180 - dist) / 180
+            
+            // Push petals in direction of mouse movement velocity
+            this.x += mouseVelocity.x * force * 1.2
+            this.y += mouseVelocity.y * force * 1.2
+            
+            // Add extra swirl
+            this.vx += (dx / dist) * force * 0.15
+            this.vy += (dy / dist) * force * 0.08
           }
         }
 
-        ctx.stroke()
-        wave.phase += wave.speed
+        // Apply drag back to terminal speed limits
+        this.vx += ( (Math.random() * 2 + 2.5) - this.vx ) * 0.01
+        this.vy += ( (Math.random() * 0.8 + 0.4) - this.vy ) * 0.01
+
+        // Reset if offscreen (left/right bounds or bottom bounds)
+        if (this.x > width + 30 || this.y > height + 30) {
+          this.reset(false)
+        }
+      }
+
+      draw(c) {
+        c.save()
+        c.translate(this.x, this.y)
+        c.rotate(this.rotation)
+        c.scale(1, this.tilt) // Scale Y dimension dynamically to simulate 3D rotation flip
+
+        c.beginPath()
+        c.fillStyle = this.color
+        
+        // Optional pink shadow blur for premium glowing look
+        c.shadowBlur = 4
+        c.shadowColor = 'rgba(255, 183, 197, 0.4)'
+
+        // Procedural sakura petal drawing with split/notched tip
+        c.moveTo(0, 0)
+        c.bezierCurveTo(
+          -this.size / 2, -this.size / 2, 
+          -this.size / 2, -this.size * 1.2, 
+          0, -this.size * 1.5
+        )
+        c.bezierCurveTo(
+          this.size * 0.15, -this.size * 1.4, 
+          this.size * 0.35, -this.size * 1.4, 
+          this.size * 0.5, -this.size * 1.5
+        )
+        c.bezierCurveTo(
+          this.size / 2, -this.size * 1.2, 
+          this.size / 2, -this.size / 2, 
+          0, 0
+        )
+
+        c.fill()
+        c.restore()
+      }
+    }
+
+    // Initialize petals collection
+    for (let i = 0; i < maxPetals; i++) {
+      petals.push(new Petal())
+    }
+
+    // Track mouse coordinates & velocity
+    let mouse = { x: undefined, y: undefined }
+    let lastMouse = { x: undefined, y: undefined }
+    let mouseVelocity = { x: 0, y: 0 }
+    let mouseTimer = null
+
+    const handleMouseMove = (e) => {
+      mouse.x = e.clientX
+      mouse.y = e.clientY
+      
+      if (lastMouse.x !== undefined && lastMouse.y !== undefined) {
+        mouseVelocity.x = mouse.x - lastMouse.x
+        mouseVelocity.y = mouse.y - lastMouse.y
+      }
+      
+      lastMouse.x = mouse.x
+      lastMouse.y = mouse.y
+
+      // Reset mouse velocity decay timer
+      clearTimeout(mouseTimer)
+      mouseTimer = setTimeout(() => {
+        mouseVelocity.x = 0
+        mouseVelocity.y = 0
+      }, 100)
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+
+    // Animation Loop
+    const animate = () => {
+      ctx.clearRect(0, 0, width, height)
+
+      // Draw background ambient depth-of-field lights (glowing bokeh circles)
+      ctx.save()
+      ctx.globalCompositeOperation = 'screen'
+      petals.forEach((p, idx) => {
+        // Draw bokeh lights for every 5th petal for depth
+        if (idx % 5 === 0) {
+          ctx.beginPath()
+          const glowGrad = ctx.createRadialGradient(
+            p.x, p.y - 200, 0,
+            p.x, p.y - 200, p.size * 8
+          )
+          glowGrad.addColorStop(0, 'rgba(255, 183, 197, 0.05)')
+          glowGrad.addColorStop(0.5, 'rgba(255, 166, 201, 0.02)')
+          glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)')
+          
+          ctx.fillStyle = glowGrad
+          ctx.arc(p.x, p.y - 200, p.size * 8, 0, Math.PI * 2)
+          ctx.fill()
+        }
       })
+      ctx.restore()
+
+      // Update and draw petals
+      petals.forEach((petal) => {
+        petal.update(mouse, mouseVelocity)
+        petal.draw(ctx)
+      })
+
+      // Decay mouse velocity slowly
+      mouseVelocity.x *= 0.95
+      mouseVelocity.y *= 0.95
 
       animationFrameId = requestAnimationFrame(animate)
     }
@@ -118,6 +219,7 @@ export default function FlowingBackground() {
       window.removeEventListener('resize', handleResize)
       window.removeEventListener('mousemove', handleMouseMove)
       cancelAnimationFrame(animationFrameId)
+      clearTimeout(mouseTimer)
     }
   }, [])
 

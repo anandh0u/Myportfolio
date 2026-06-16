@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 export default function WelcomeScreen({ onEnter }) {
   const [phase, setPhase] = useState('idle') // idle, transitioning, complete
   const [doorsOpen, setDoorsOpen] = useState(false)
-  const [isShaking, setIsShaking] = useState(false)
+  const [isSwaying, setIsSwaying] = useState(false)
   const [isVisible, setIsVisible] = useState(true)
   
   const canvasRef = useRef(null)
@@ -21,14 +21,14 @@ export default function WelcomeScreen({ onEnter }) {
     if (phase !== 'idle') return
     setPhase('transitioning')
     setDoorsOpen(true)
-    setIsShaking(true)
+    setIsSwaying(true)
 
-    // Stop shaking after some time
+    // Stop swaying after some time
     setTimeout(() => {
-      setIsShaking(false);
-    }, 1200);
+      setIsSwaying(false);
+    }, 1500);
 
-    // Call the parent enter function when the screen is fully blacked out by fog
+    // Call the parent enter function when the screen is fully covered by petals
     setTimeout(() => {
       onEnter()
       document.body.style.overflow = ''
@@ -58,206 +58,199 @@ export default function WelcomeScreen({ onEnter }) {
     }
     window.addEventListener('resize', handleResize)
     
-    // Lightning state
-    let lightningStrikes = []
-    let flashOpacity = 0
-    let strikeTimer = 0
+    // Sakura colors (various soft pinks and blushes)
+    const COLORS = [
+      'rgba(255, 183, 197, 0.85)', // Cherry Pink
+      'rgba(255, 166, 201, 0.80)', // Bright Blossom Pink
+      'rgba(255, 204, 213, 0.90)', // Soft White-Pink
+      'rgba(255, 105, 180, 0.75)', // Hot Pink highlight
+      'rgba(244, 154, 193, 0.85)'  // Classic Sakura
+    ]
     
-    // Smoke / Fog particles state
-    let particles = []
-    const particleEmitterX = width / 2
-    const particleEmitterY = height / 2
-    let emissionRate = 0 // Will increase when doors start opening
     let globalFogDensity = 0 // Blackout overlay density
+    let hasTriggeredBlast = false
     
-    class SmokeParticle {
-      constructor(x, y) {
-        this.x = x
-        this.y = y
-        const angle = Math.random() * Math.PI * 2
-        const speed = Math.random() * 5 + 3
-        this.vx = Math.cos(angle) * speed
-        this.vy = Math.sin(angle) * speed
-        this.radius = Math.random() * 40 + 20
-        this.maxRadius = Math.random() * 250 + 150
-        this.alpha = 0.1
-        this.growth = Math.random() * 3 + 4
-        // Dark, blackish/deep purple fog color
-        const shade = Math.floor(Math.random() * 10) + 5 // very dark
-        const purp = Math.floor(Math.random() * 12) + 5
-        this.color = `rgba(${shade}, ${purp}, ${shade + 10}`
+    // Sakura Petal Class
+    class SakuraPetal {
+      constructor(isNew = false) {
+        this.reset(isNew)
+      }
+      
+      reset(isNew = false) {
+        this.originalSize = Math.random() * 8 + 6
+        this.size = this.originalSize
+        
+        if (phase === 'transitioning') {
+          // Spawn near the center vortex or enter from the side
+          if (Math.random() > 0.5) {
+            this.x = width / 2 + (Math.random() - 0.5) * 100
+            this.y = height / 2 + (Math.random() - 0.5) * 100
+            const angle = Math.random() * Math.PI * 2
+            const speed = Math.random() * 12 + 6
+            this.vx = Math.cos(angle) * speed
+            this.vy = Math.sin(angle) * speed
+          } else {
+            this.x = Math.random() * -100 - 20
+            this.y = Math.random() * height
+            this.vx = Math.random() * 6 + 4
+            this.vy = Math.random() * 4 + 2
+          }
+        } else {
+          // Idle drift
+          this.x = isNew ? Math.random() * -100 - 20 : Math.random() * width
+          this.y = Math.random() * height
+          this.vx = Math.random() * 1.5 + 1.2
+          this.vy = Math.random() * 0.8 + 0.4
+        }
+        
+        this.rotation = Math.random() * Math.PI * 2
+        this.rotationSpeed = (Math.random() - 0.5) * 0.04
+        this.tilt = Math.random()
+        this.tiltAngle = Math.random() * Math.PI
+        this.tiltSpeed = Math.random() * 0.03 + 0.01
+        
+        this.oscillationAngle = Math.random() * Math.PI
+        this.oscillationSpeed = Math.random() * 0.02 + 0.01
+        this.oscillationDistance = Math.random() * 2 + 1
+        
+        this.color = COLORS[Math.floor(Math.random() * COLORS.length)]
       }
       
       update() {
-        this.x += this.vx
-        this.y += this.vy
-        // Friction / slowdown
-        this.vx *= 0.98
-        this.vy *= 0.98
-        
-        if (this.radius < this.maxRadius) {
-          this.radius += this.growth
+        if (phase === 'transitioning') {
+          // Grow sizes to cover the screen completely
+          if (this.size < this.originalSize * 2.8) {
+            this.size += 0.06
+          }
+          
+          // Swirl vortex centered around the screen center
+          const dx = this.x - width / 2
+          const dy = this.y - height / 2
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          
+          if (dist > 10) {
+            const angle = Math.atan2(dy, dx)
+            const swirlForce = 0.22
+            const radialForce = 0.08
+            
+            this.vx += -Math.sin(angle) * swirlForce + Math.cos(angle) * radialForce
+            this.vy += Math.cos(angle) * swirlForce + Math.sin(angle) * radialForce
+          }
+          
+          // Speed limit cap
+          const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy)
+          if (speed > 16) {
+            this.vx = (this.vx / speed) * 16
+            this.vy = (this.vy / speed) * 16
+          }
+        } else {
+          // Gentle drift velocities
+          this.vx += ( (Math.random() * 1.5 + 1.2) - this.vx ) * 0.05
+          this.vy += ( (Math.random() * 0.8 + 0.4) - this.vy ) * 0.05
         }
         
-        if (phase === 'transitioning') {
-          // Increase alpha to make it thick
-          if (this.alpha < 0.95) {
-            this.alpha += 0.02
-          }
+        this.x += this.vx + Math.sin(this.oscillationAngle) * this.oscillationDistance
+        this.y += this.vy
+        
+        this.rotation += this.rotationSpeed
+        this.tiltAngle += this.tiltSpeed
+        this.tilt = Math.sin(this.tiltAngle) * 0.8
+        this.oscillationAngle += this.oscillationSpeed
+        
+        // Reset if offscreen (wider bounds in transition to keep screen covered)
+        const bound = phase === 'transitioning' ? 250 : 40
+        if (this.x > width + bound || this.y > height + bound || this.x < -bound || this.y < -bound) {
+          this.reset(true)
         }
       }
       
       draw(c) {
         c.save()
-        c.beginPath()
-        const grad = c.createRadialGradient(
-          this.x, this.y, this.radius * 0.1,
-          this.x, this.y, this.radius
-        )
-        grad.addColorStop(0, `${this.color}, ${this.alpha})`)
-        grad.addColorStop(0.5, `${this.color}, ${this.alpha * 0.6})`)
-        grad.addColorStop(1, `${this.color}, 0)`)
+        c.translate(this.x, this.y)
+        c.rotate(this.rotation)
+        c.scale(1, this.tilt)
         
-        c.fillStyle = grad
-        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2)
+        c.beginPath()
+        c.fillStyle = this.color
+        c.shadowBlur = 4
+        c.shadowColor = 'rgba(255, 183, 197, 0.4)'
+        
+        c.moveTo(0, 0)
+        c.bezierCurveTo(
+          -this.size / 2, -this.size / 2, 
+          -this.size / 2, -this.size * 1.2, 
+          0, -this.size * 1.5
+        )
+        c.bezierCurveTo(
+          this.size * 0.15, -this.size * 1.4, 
+          this.size * 0.35, -this.size * 1.4, 
+          this.size * 0.5, -this.size * 1.5
+        )
+        c.bezierCurveTo(
+          this.size / 2, -this.size * 1.2, 
+          this.size / 2, -this.size / 2, 
+          0, 0
+        )
+        
         c.fill()
         c.restore()
       }
     }
     
-    // Helper to generate a single lightning path
-    const createLightningPath = (sx, sy, tx, ty, displace) => {
-      const path = []
-      path.push({ x: sx, y: sy })
-      
-      const midX = (sx + tx) / 2
-      const midY = (sy + ty) / 2
-      
-      const divide = (x1, y1, x2, y2, disp) => {
-        if (disp < 4) {
-          path.push({ x: x2, y: y2 })
-        } else {
-          const mx = (x1 + x2) / 2 + (Math.random() - 0.5) * disp
-          const my = (y1 + y2) / 2 + (Math.random() - 0.5) * disp
-          divide(x1, y1, mx, my, disp / 2)
-          divide(mx, my, x2, y2, disp / 2)
-        }
-      }
-      
-      divide(sx, sy, tx, ty, displace)
-      return path
+    // Sakura petals collection
+    let petals = []
+    const maxIdlePetals = 60
+    const maxTransitionPetals = 500
+    
+    for (let i = 0; i < maxIdlePetals; i++) {
+      petals.push(new SakuraPetal(false))
     }
     
     // Main animation loop
     const animate = () => {
       ctx.clearRect(0, 0, width, height)
       
-      // Update and draw smoke/fog particles
+      // Update and draw transition particles
       if (phase === 'transitioning') {
-        emissionRate = Math.min(emissionRate + 0.8, 15) // Accelerate smoke emission
-        globalFogDensity = Math.min(globalFogDensity + 0.009, 1.0) // Transition to total blackout
-      }
-      
-      // Emit new particles from center
-      for (let i = 0; i < Math.floor(emissionRate); i++) {
-        // Emit in a slightly randomized circle around center
-        const offsetAngle = Math.random() * Math.PI * 2
-        const offsetDist = Math.random() * 30
-        const px = particleEmitterX + Math.cos(offsetAngle) * offsetDist
-        const py = particleEmitterY + Math.sin(offsetAngle) * offsetDist
-        particles.push(new SmokeParticle(px, py))
-      }
-      
-      particles.forEach((p) => {
-        p.update()
-        p.draw(ctx)
-      })
-      
-      // Filter out particles that are off screen or fully decayed (though we keep them alive in blackout phase)
-      if (particles.length > 200) {
-        particles.shift()
-      }
-      
-      // Lightning logic during transitioning phase
-      if (phase === 'transitioning') {
-        strikeTimer++
+        // Trigger initial blast once at start of transition
+        if (!hasTriggeredBlast) {
+          hasTriggeredBlast = true
+          // Spawn a massive burst of 350 petals instantly at the center
+          for (let i = 0; i < 350; i++) {
+            const angle = Math.random() * Math.PI * 2
+            const speed = Math.random() * 14 + 6
+            const petal = new SakuraPetal(true)
+            petal.x = width / 2
+            petal.y = height / 2
+            petal.vx = Math.cos(angle) * speed
+            petal.vy = Math.sin(angle) * speed
+            petal.rotationSpeed = (Math.random() - 0.5) * 0.25
+            petal.tiltSpeed = Math.random() * 0.09 + 0.05
+            petals.push(petal)
+          }
+        }
         
-        // Spawn lightning strikes at specific intervals
-        if (strikeTimer === 5 || strikeTimer === 12 || strikeTimer === 28 || strikeTimer === 42 || strikeTimer === 60) {
-          flashOpacity = Math.random() * 0.7 + 0.3
-          
-          // Generate a main bolt from sky to center
-          const targetX = width / 2 + (Math.random() - 0.5) * 100
-          const targetY = height / 2 + (Math.random() - 0.5) * 50
-          const startX = width * Math.random()
-          const startY = 0
-          
-          const path = createLightningPath(startX, startY, targetX, targetY, width / 4)
-          lightningStrikes.push({
-            path,
-            width: Math.random() * 4 + 2,
-            opacity: 1.0,
-            color: '#00f0ff', // Cyan lightning
-          })
-          
-          // Add a second branching strike
-          if (Math.random() > 0.4) {
-            const sideStartX = startX + (Math.random() - 0.5) * 200
-            const sidePath = createLightningPath(sideStartX, 0, targetX + (Math.random() - 0.5) * 150, targetY, width / 5)
-            lightningStrikes.push({
-              path: sidePath,
-              width: Math.random() * 2 + 1,
-              opacity: 0.8,
-              color: '#ff007f', // Pink secondary branching
-            })
+        // Increase blackout overlay density
+        globalFogDensity = Math.min(globalFogDensity + 0.008, 1.0)
+        
+        // Rapidly spawn extra petals for the blizzard storm
+        if (petals.length < maxTransitionPetals) {
+          const spawnCount = Math.min(10, maxTransitionPetals - petals.length)
+          for (let i = 0; i < spawnCount; i++) {
+            petals.push(new SakuraPetal(true))
           }
         }
       }
       
-      // Render lightning strikes
-      lightningStrikes.forEach((strike, idx) => {
-        if (strike.path.length < 2) return
-        
-        ctx.save()
-        // Draw outer glow
-        ctx.shadowBlur = 25
-        ctx.shadowColor = strike.color
-        ctx.strokeStyle = strike.color
-        ctx.lineWidth = strike.width * 2
-        ctx.globalAlpha = strike.opacity
-        
-        ctx.beginPath()
-        ctx.moveTo(strike.path[0].x, strike.path[0].y)
-        for (let i = 1; i < strike.path.length; i++) {
-          ctx.lineTo(strike.path[i].x, strike.path[i].y)
-        }
-        ctx.stroke()
-        
-        // Draw bright inner core
-        ctx.strokeStyle = '#ffffff'
-        ctx.lineWidth = strike.width * 0.5
-        ctx.shadowBlur = 5
-        ctx.stroke()
-        
-        ctx.restore()
-        
-        // Fade out strike
-        strike.opacity -= 0.08
+      // Update and draw sakura petals
+      petals.forEach((petal) => {
+        petal.update()
+        petal.draw(ctx)
       })
       
-      // Clean finished strikes
-      lightningStrikes = lightningStrikes.filter(s => s.opacity > 0)
-      
-      // Draw screen-wide flash overlays for lightning impact
-      if (flashOpacity > 0) {
-        ctx.fillStyle = `rgba(255, 255, 255, ${flashOpacity})`
-        ctx.fillRect(0, 0, width, height)
-        flashOpacity -= 0.06 // Fade screen flash
-      }
-      
-      // Solid blackout overlay as fog becomes absolute
+      // Solid blackout overlay as fog becomes absolute (tinted with deep midnight rose)
       if (globalFogDensity > 0) {
-        ctx.fillStyle = `rgba(5, 2, 12, ${globalFogDensity})`
+        ctx.fillStyle = `rgba(15, 8, 20, ${globalFogDensity})`
         ctx.fillRect(0, 0, width, height)
       }
       
@@ -275,8 +268,8 @@ export default function WelcomeScreen({ onEnter }) {
   if (!isVisible) return null
   
   return (
-    <div className={`welcome-overlay ${phase === 'complete' ? 'fade-out' : ''} ${isShaking ? 'shake-effect' : ''}`}>
-      {/* Background canvas for particles and lightning strikes */}
+    <div className={`welcome-overlay ${phase === 'complete' ? 'fade-out' : ''} ${isSwaying ? 'wind-sway-effect' : ''}`}>
+      {/* Background canvas for particles and sakura petals */}
       <canvas ref={canvasRef} className="welcome-canvas" />
       
       {/* Doors Section */}
