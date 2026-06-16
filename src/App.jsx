@@ -1,48 +1,253 @@
 import { useState, useEffect } from 'react'
+import FlowingBackground from './components/FlowingBackground'
+import WelcomeScreen from './components/WelcomeScreen'
 import './App.css'
 
 export default function App() {
+  const [hasEntered, setHasEntered] = useState(false)
   const [activeNav, setActiveNav] = useState('home')
-  const [expandedPaper, setExpandedPaper] = useState(null)
+  const [activeCategory, setActiveCategory] = useState('all')
+  const [scrollWidth, setScrollWidth] = useState(0)
 
+  // Interactive Terminal State
+  const [consoleHistory, setConsoleHistory] = useState([
+    { text: 'Initializing portfolio diagnostics...', type: 'system' },
+    { text: 'Type help or click the shortcuts below to query the database.', type: 'info' },
+  ])
+  const [inputValue, setInputValue] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+
+  // Track page scroll to update progress bar
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalScroll = document.documentElement.scrollHeight - window.innerHeight
+      if (totalScroll > 0) {
+        const percentage = (window.scrollY / totalScroll) * 100
+        setScrollWidth(percentage)
+      }
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Navigation scrolling
   const scrollToSection = (id) => {
     const element = document.getElementById(id)
     element?.scrollIntoView({ behavior: 'smooth' })
     setActiveNav(id)
   }
 
-  const researchPapers = [
-    { id: 1, title: '[Paper Title 1]', authors: 'You et al.', venue: 'Conference/Journal', year: 2024, abstract: '[Abstract goes here]', tags: ['CPS', 'Control Systems'], arxiv: '#', doi: '#' },
-    { id: 2, title: '[Paper Title 2]', authors: 'You et al.', venue: 'Conference/Journal', year: 2024, abstract: '[Abstract goes here]', tags: ['Robotics', 'AI'], arxiv: '#', doi: '#' },
-    { id: 3, title: '[Paper Title 3]', authors: 'You et al.', venue: 'Conference/Journal', year: 2023, abstract: '[Abstract goes here]', tags: ['IoT', 'Edge Computing'], arxiv: '#', doi: '#' },
-  ]
+  // Predefined terminal command responses
+  const COMMAND_RESPONSES = {
+    help: [
+      { text: 'Available system query logs:', type: 'success' },
+      { text: '  about      - Display biographic profile narrative', type: 'system' },
+      { text: '  skills     - List active technical domains and expertise', type: 'system' },
+      { text: '  status     - Show current academic enrollment metrics', type: 'system' },
+      { text: '  clear      - Clear terminal screen log', type: 'system' }
+    ],
+    about: [
+      { text: 'Profile Narrative:', type: 'success' },
+      { text: '  Anandhu P is a Cyber Physical Systems student and Robotics Developer based at Government Engineering College, Thrissur.', type: 'system' },
+      { text: '  Specialization centers on fusing intelligent hardware control, embedded systems, computer vision, and secure network infrastructure.', type: 'system' },
+      { text: '  Goal: Designing intelligent real-world architectures that assist, protect, and automate.', type: 'system' }
+    ],
+    skills: [
+      { text: 'Active Domain Clusters:', type: 'success' },
+      { text: '  Programming  - Python, C++, C, MATLAB, Dart, Rust (Basic)', type: 'system' },
+      { text: '  Robotics     - Robot Operating System (ROS), AUBO Robot Safety Pipelines', type: 'system' },
+      { text: '  Embedded     - Microcontroller Programming (Arduino, ESP8266), Servo Actuation', type: 'system' },
+      { text: '  Sec & Web    - Threat Assessment, Kali Linux, Node.js, Next.js, Flutter', type: 'system' }
+    ],
+    status: [
+      { text: 'Current Status Parameters:', type: 'success' },
+      { text: '  Affiliation  : Government Engineering College, Thrissur', type: 'system' },
+      { text: '  Program      : Bachelor of Technology in Cyber Physical Systems (2024 - 2028)', type: 'system' },
+      { text: '  Internship   : Cybersecurity Intern at Cybernix YLLP', type: 'system' },
+      { text: '  Uptime       : Active developmental state', type: 'system' }
+    ]
+  }
+
+  const handleCommand = (cmd) => {
+    const cleanCmd = cmd.trim().toLowerCase()
+    
+    // Add command to history
+    const commandLine = { text: `$ query_sys --target ${cleanCmd}`, type: 'input' }
+    
+    if (cleanCmd === 'clear') {
+      setConsoleHistory([commandLine])
+      return
+    }
+
+    let response = [
+      { text: `Unknown command "${cleanCmd}". Type "help" to list valid directives.`, type: 'error' }
+    ]
+
+    if (COMMAND_RESPONSES[cleanCmd]) {
+      response = COMMAND_RESPONSES[cleanCmd]
+    }
+
+    setConsoleHistory(prev => [...prev, commandLine, ...response])
+  }
+
+  // Trigger typing simulation when clicking shortcut buttons
+  const triggerShortcut = (cmd) => {
+    if (isTyping) return
+    setIsTyping(true)
+    setInputValue('')
+    
+    let currentText = ''
+    let charIndex = 0
+    
+    const typingInterval = setInterval(() => {
+      if (charIndex < cmd.length) {
+        currentText += cmd[charIndex]
+        setInputValue(currentText)
+        charIndex++
+      } else {
+        clearInterval(typingInterval)
+        setTimeout(() => {
+          handleCommand(cmd)
+          setInputValue('')
+          setIsTyping(false)
+        }, 300)
+      }
+    }, 60)
+  }
 
   const technicalProjects = [
-    { title: '[Project Name]', desc: '[Description]', tags: ['Backend', 'System Design'], github: '#', year: 2024 },
-    { title: '[Project Name]', desc: '[Description]', tags: ['Frontend', 'Real-time'], github: '#', year: 2024 },
-    { title: '[Project Name]', desc: '[Description]', tags: ['Robotics', 'Embedded'], github: '#', year: 2023 },
-  ]
+    {
+      title: 'AUBO Robot Safety System',
+      desc: 'Developing an intelligent safety system for an AUBO robotic arm to improve industrial safety, automation reliability, and human-machine interaction through real-time monitoring and control.',
+      tags: ['ROS', 'Robotics', 'Safety Systems', 'Industrial Automation'],
+      category: 'robotics',
+      github: 'https://github.com/anandh0u',
+      year: 2025
+    },
+    {
+      title: 'Speech Emotion Detection using LLM',
+      desc: 'Designed an AI-powered emotion recognition system that analyzes speech signals using machine learning and Large Language Model concepts to improve human-computer interaction.',
+      tags: ['Python', 'AI', 'Machine Learning', 'NLP', 'LLM'],
+      category: 'ai_ml',
+      github: 'https://github.com/anandh0u/Speech-Ai-llm-',
+      year: 2025
+    },
+    {
+      title: 'Multimodal Emotion Recognition',
+      desc: 'Multimodal emotion recognition internship project focusing on processing multiple feedback channels to classify emotional states in real-time.',
+      tags: ['Python', 'AI', 'Deep Learning', 'Signal Processing'],
+      category: 'ai_ml',
+      github: 'https://github.com/anandh0u/emotion_recognition_internship',
+      year: 2025
+    },
+    {
+      title: 'MedBridge AI Reasoning Agent',
+      desc: 'MedBridge AI: Microsoft Foundry reasoning agent for community health triage using Foundry IQ, Work IQ, and Fabric IQ systems.',
+      tags: ['AI Agents', 'Reasoning', 'Foundry IQ', 'Healthcare Automation'],
+      category: 'ai_ml',
+      github: 'https://github.com/anandh0u/medbridge-ai',
+      year: 2026
+    },
+    {
+      title: 'Memori Memory Infrastructure',
+      desc: 'An agent-native memory infrastructure providing a LLM-agnostic layer that structures execution logs and conversation data into persistent states for production systems.',
+      tags: ['LLM', 'AI Agents', 'Data Infrastructure', 'Database Design'],
+      category: 'ai_ml',
+      github: 'https://github.com/anandh0u/Memori',
+      year: 2026
+    },
+    {
+      title: 'EEG-EMG Controlled Exoskeleton Arm',
+      desc: 'Developed a smart robotic exoskeleton that utilizes EEG and EMG signals to assist movement and rehabilitation applications.',
+      tags: ['Biomedical Signals', 'Robotics', 'Embedded Systems', 'AI'],
+      category: 'robotics',
+      github: 'https://github.com/anandh0u',
+      year: 2025
+    },
+    {
+      title: 'Camera-Based Obstacle Detection System',
+      desc: 'Built a computer vision solution that detects obstacles using external camera systems, enabling robotic path awareness and environmental sensing.',
+      tags: ['Computer Vision', 'Python', 'Robotics', 'AI'],
+      category: 'ai_ml',
+      github: 'https://github.com/anandh0u',
+      year: 2025
+    },
+    {
+      title: 'Dual Servo Control using ESP8266',
+      desc: 'Implemented wireless multi-servo control using ESP8266 microcontrollers for robotic movement and automation applications.',
+      tags: ['ESP8266', 'Embedded Systems', 'IoT', 'Robotics'],
+      category: 'embedded',
+      github: 'https://github.com/anandh0u',
+      year: 2024
+    },
+    {
+      title: 'Hardware Password Checker using Digital ICs',
+      desc: 'Designed and implemented a hardware-based password authentication system using digital IC components for secure access control.',
+      tags: ['Digital Electronics', 'Logic Design', 'Hardware Security'],
+      category: 'embedded',
+      github: 'https://github.com/anandh0u',
+      year: 2024
+    }
+  ];
+
+  const filteredProjects = activeCategory === 'all'
+    ? technicalProjects
+    : technicalProjects.filter(p => p.category === activeCategory);
 
   const expertise = [
-    { domain: 'Cyber-Physical Systems', skills: ['Control Theory', 'System Modeling', 'Real-time Processing'] },
-    { domain: 'Robotics & Automation', skills: ['ROS', 'Embedded Systems', 'Computer Vision'] },
-    { domain: 'Backend Engineering', skills: ['Distributed Systems', 'APIs', 'Database Design'] },
-    { domain: 'Frontend Development', skills: ['React', 'UI/UX', 'Data Visualization'] },
-    { domain: 'AI & Machine Learning', skills: ['Deep Learning', 'Neural Networks', 'Model Optimization'] },
-    { domain: 'IoT & Edge Computing', skills: ['Edge Devices', 'Protocol Design', 'Network Optimization'] },
-  ]
+    { domain: 'Programming Languages', skills: ['Python', 'C++', 'C', 'MATLAB', 'Dart', 'Rust (Basic)'] },
+    { domain: 'Web & Software Development', skills: ['Node.js', 'Next.js', 'Backend Development', 'Flutter'] },
+    { domain: 'Robotics & Automation', skills: ['ROS (Robot Operating System)', 'AUBO Robot Integration', 'Robot Safety Systems', 'Industrial Automation', 'Human-Robot Interaction'] },
+    { domain: 'Embedded Systems', skills: ['Arduino', 'ESP8266', 'Microcontroller Programming', 'Sensor Integration', 'Servo Motor Control'] },
+    { domain: 'Cybersecurity', skills: ['Cyber Defense', 'Cybercrime Investigation', 'Security Analysis', 'Digital Threat Assessment'] },
+    { domain: 'Tools & Platforms', skills: ['Git', 'Linux / Ubuntu', 'Kali Linux', 'VS Code', 'MATLAB', 'SolidWorks'] }
+  ];
+
+  const experience = [
+    {
+      role: 'Cybersecurity Intern',
+      company: 'Cybernix YLLP',
+      location: 'Kochi, Kerala',
+      period: 'Sep 2025 – Oct 2025',
+      points: [
+        'Worked on cybersecurity defense initiatives, understanding digital protection mechanisms.',
+        'Assisted in forensic analysis and security investigations for virtual safety assessments.',
+        'Conducted vulnerability testing and threat mitigation analyses.',
+        'Developed structural logs utilizing threat modeling strategies to secure data flows.'
+      ]
+    }
+  ];
+
+  const certifications = [
+    'Python Programming Core Certificate',
+    'Cybernix YLLP Cybersecurity Internship Credentials',
+    'Industrial Robotics and Safety Controls Workshops',
+    'Embedded Systems & Microcontroller Programming Symposium'
+  ];
 
   return (
     <div className="app">
+      <WelcomeScreen onEnter={() => setHasEntered(true)} />
+      {/* Top Scroll Progress Indicator */}
+      <div className="scroll-progress" style={{ width: `${scrollWidth}%` }}></div>
+
+      <FlowingBackground />
+
       {/* Navigation */}
       <header className="header">
         <div className="container">
           <div className="nav-content">
-            <div className="logo">
-              <span className="logo-accent">&lt;</span>mypath<span className="logo-accent">/&gt;</span>
+            <div className="logo-group">
+              <div className="logo">
+                <span className="logo-accent">&lt;</span>anandhu_p<span className="logo-accent">/&gt;</span>
+              </div>
+              <div className="logo-status">
+                <span className="status-dot"></span>
+                <span className="status-text">system_online</span>
+              </div>
             </div>
             <nav className="nav-links">
-              {['home', 'research', 'projects', 'expertise', 'about'].map((item) => (
+              {['home', 'about', 'projects', 'expertise', 'experience'].map((item) => (
                 <button
                   key={item}
                   className={activeNav === item ? 'nav-btn active' : 'nav-btn'}
@@ -56,87 +261,211 @@ export default function App() {
         </div>
       </header>
 
-      {/* Hero */}
+      {/* Hero Section */}
       <section id="home" className="hero">
         <div className="container">
           <div className="hero-content">
             <div className="hero-text">
+              <div className="hero-hud-badge">
+                <span className="hud-badge-tag">[ engineering_node ]</span>
+                <span className="hud-badge-ping">ping: 14ms</span>
+              </div>
               <h1 className="hero-title">
-                Research & Engineering
-                <span className="hero-accent">in CPS, Robotics & AI</span>
+                Anandhu P
+                <span className="hero-accent">Cyber Physical Systems & Robotics</span>
               </h1>
               <p className="hero-subtitle">
-                Building intelligent systems at the intersection of cyber-physical worlds.
-                Specializing in backend architecture, edge computing, and autonomous systems.
+                I study the boundary where intelligent software meets hardware controls. As an engineer specializing in Cyber Physical Systems, I construct robotic safety frameworks, train speech ML classifiers, and program embedded hardware nodes.
               </p>
               <div className="hero-cta">
-                <button className="btn-primary" onClick={() => scrollToSection('research')}>
-                  view research
+                <button className="btn-primary" onClick={() => scrollToSection('about')}>
+                  explore engineering logs
                 </button>
                 <button className="btn-secondary" onClick={() => scrollToSection('contact')}>
-                  contact
+                  connect
                 </button>
               </div>
             </div>
+
+            {/* Interactive Console Visual */}
             <div className="hero-visual">
-              <div className="tech-grid">
-                {['CPS', 'Backend', 'Robotics', 'IoT', 'AI', 'Frontend'].map((tech, i) => (
-                  <div key={i} className="tech-node">{tech}</div>
-                ))}
+              <div className="console-container">
+                <div className="console-header">
+                  <div className="console-buttons">
+                    <span className="console-btn red"></span>
+                    <span className="console-btn yellow"></span>
+                    <span className="console-btn green"></span>
+                  </div>
+                  <span className="console-title">node: gec_thrissur // system_query</span>
+                </div>
+                <div className="console-body">
+                  {consoleHistory.map((line, idx) => (
+                    <div key={idx} className="console-line">
+                      {line.type === 'input' ? (
+                        <>
+                          <span className="console-prompt">&gt;</span>
+                          <span className="console-input">{line.text}</span>
+                        </>
+                      ) : line.type === 'error' ? (
+                        <span className="console-output" style={{ color: '#ef4444' }}>{line.text}</span>
+                      ) : line.type === 'success' ? (
+                        <span className="console-output" style={{ color: 'var(--accent)' }}>{line.text}</span>
+                      ) : (
+                        <span className="console-output">{line.text}</span>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* Active input simulation line */}
+                  <div className="console-line">
+                    <span className="console-prompt">&gt;</span>
+                    <span className="console-input">
+                      {inputValue}
+                      <span className="blink-cursor" style={{ 
+                        display: 'inline-block', 
+                        width: '8px', 
+                        height: '15px', 
+                        background: 'var(--accent)', 
+                        marginLeft: '4px',
+                        animation: 'pulse 1s infinite' 
+                      }}></span>
+                    </span>
+                  </div>
+                </div>
+                <div className="console-footer" style={{ 
+                  background: 'rgba(15, 10, 32, 0.9)', 
+                  padding: '12px 18px', 
+                  borderTop: '1px solid var(--glass-border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  flexWrap: 'wrap'
+                }}>
+                  <span style={{ fontFamily: 'JetBrains Mono', fontSize: '11px', color: 'var(--text-secondary)' }}>Quick query:</span>
+                  {['about', 'skills', 'status', 'clear'].map((cmd) => (
+                    <button 
+                      key={cmd}
+                      disabled={isTyping}
+                      onClick={() => triggerShortcut(cmd)}
+                      style={{ 
+                        padding: '4px 10px', 
+                        fontSize: '11px', 
+                        fontFamily: 'JetBrains Mono',
+                        border: '1px solid var(--border)',
+                        background: 'rgba(255,255,255,0.02)',
+                        borderRadius: '3px',
+                        color: 'var(--accent)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {cmd}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Research Papers */}
-      <section id="research" className="research">
+      {/* About Section */}
+      <section id="about" className="about">
         <div className="container">
           <div className="section-header">
-            <h2>research & publications</h2>
+            <h2>about me</h2>
             <div className="header-line"></div>
           </div>
 
-          <div className="papers-list">
-            {researchPapers.map((paper) => (
-              <div key={paper.id} className="paper-card">
-                <div className="paper-header">
-                  <div className="paper-title-section">
-                    <h3>{paper.title}</h3>
-                    <p className="paper-meta">{paper.authors} • {paper.venue} {paper.year}</p>
-                  </div>
-                  <div className="paper-year">{paper.year}</div>
+          <div className="about-content">
+            <div className="about-text">
+              <p className="profile-intro">
+                Bridging mechanical hardware, electronic routing, and cognitive AI layer engineering.
+              </p>
+              <p style={{ marginBottom: '24px', fontSize: '15px', color: 'var(--text-secondary)' }}>
+                Based at the Government Engineering College, Thrissur (2024–2028), I specialize in Cyber Physical Systems. My academic curriculum and practical build logs explore how complex, real-world machines integrate with AI feedback networks and secure interfaces. 
+              </p>
+
+              {/* Pillars Cards (No emojis, highly structured) */}
+              <div className="pillars-grid">
+                <div className="pillar-card">
+                  <div className="pillar-meta">Academic Focus</div>
+                  <h3>Cyber Physical Systems</h3>
+                  <p>Enrolled at Government Engineering College, Thrissur (2024–2028), concentrating on real-world software integration, control algorithms, and system engineering.</p>
                 </div>
-
-                <p className="paper-abstract">{paper.abstract}</p>
-
-                <div className="paper-tags">
-                  {paper.tags.map((tag, i) => (
-                    <span key={i} className="tag">{tag}</span>
-                  ))}
+                <div className="pillar-card">
+                  <div className="pillar-meta">Primary Domain</div>
+                  <h3>Robotics & Automation</h3>
+                  <p>Building with Robot Operating System (ROS), custom safety pipelines, human-robot interfaces, and kinematics workflows.</p>
                 </div>
-
-                <div className="paper-links">
-                  <a href={paper.arxiv} className="link-item">arXiv</a>
-                  <a href={paper.doi} className="link-item">DOI</a>
-                  <a href="#" className="link-item">PDF</a>
+                <div className="pillar-card">
+                  <div className="pillar-meta">Intelligence Layer</div>
+                  <h3>Applied Machine Learning</h3>
+                  <p>Developing neural nets, signal emotion analysis classifiers, and computer vision systems for environmental awareness.</p>
+                </div>
+                <div className="pillar-card">
+                  <div className="pillar-meta">Hardware Layer</div>
+                  <h3>Embedded Systems</h3>
+                  <p>Programming ESP8266 and Arduino microcontrollers, calibrating sensor modules, and implementing actuator controls.</p>
+                </div>
+                <div className="pillar-card">
+                  <div className="pillar-meta">Security Node</div>
+                  <h3>Cybersecurity & Defense</h3>
+                  <p>Studying digital threats vectors, threat classification, system audits, and digital forensic investigations.</p>
+                </div>
+                <div className="pillar-card">
+                  <div className="pillar-meta">Software Stack</div>
+                  <h3>Full-Stack Programming</h3>
+                  <p>Developing APIs, cross-platform apps, and backends utilizing Node.js, Next.js, and Flutter architectures.</p>
                 </div>
               </div>
-            ))}
+            </div>
+
+            <div className="about-stats">
+              <div className="stat">
+                <div className="stat-value">6</div>
+                <div className="stat-label">completed physical & software systems</div>
+              </div>
+              <div className="stat">
+                <div className="stat-value">1</div>
+                <div className="stat-label">cyber security defense internship</div>
+              </div>
+              <div className="stat">
+                <div className="stat-value">4</div>
+                <div className="stat-label">professional certifications and credentials</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Technical Projects */}
+      {/* Featured Projects Section */}
       <section id="projects" className="projects">
         <div className="container">
           <div className="section-header">
-            <h2>technical projects</h2>
+            <h2>featured projects</h2>
             <div className="header-line"></div>
           </div>
 
+          {/* Filtering Tabs */}
+          <div className="project-filters">
+            {[
+              { id: 'all', label: 'All Projects' },
+              { id: 'robotics', label: 'Robotics & Automation' },
+              { id: 'ai_ml', label: 'AI & Machine Learning' },
+              { id: 'embedded', label: 'Embedded & Hardware' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                className={activeCategory === tab.id ? 'filter-btn active' : 'filter-btn'}
+                onClick={() => setActiveCategory(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           <div className="projects-grid">
-            {technicalProjects.map((project, i) => (
+            {filteredProjects.map((project, i) => (
               <div key={i} className="project-card">
                 <div className="project-num">0{i + 1}</div>
                 <h3>{project.title}</h3>
@@ -146,18 +475,18 @@ export default function App() {
                     <span key={j} className="tag">{tag}</span>
                   ))}
                 </div>
-                <a href={project.github} className="project-link">view on github →</a>
+                <a href={project.github} target="_blank" rel="noopener noreferrer" className="project-link">view project_log →</a>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Expertise Matrix */}
+      {/* Expertise Section */}
       <section id="expertise" className="expertise">
         <div className="container">
           <div className="section-header">
-            <h2>technical expertise</h2>
+            <h2>technical skills</h2>
             <div className="header-line"></div>
           </div>
 
@@ -176,40 +505,60 @@ export default function App() {
         </div>
       </section>
 
-      {/* About */}
-      <section id="about" className="about">
+      {/* Experience & Certifications */}
+      <section id="experience" className="experience">
         <div className="container">
-          <div className="section-header">
-            <h2>about</h2>
-            <div className="header-line"></div>
-          </div>
-
-          <div className="about-content">
-            <div className="about-text">
-              <p>[Your background and research focus goes here]</p>
-              <p>[Your approach to problem-solving and innovation]</p>
-              <p>[Your vision for the future of CPS/Robotics/AI]</p>
+          <div className="experience-layout">
+            
+            {/* Experience Panel */}
+            <div className="experience-panel">
+              <div className="section-header">
+                <h2>experience</h2>
+                <div className="header-line"></div>
+              </div>
+              <div className="experience-list">
+                {experience.map((exp, i) => (
+                  <div key={i} className="experience-card">
+                    <div className="exp-badge">[ internship_record // completed ]</div>
+                    <div className="exp-header">
+                      <h3>{exp.role}</h3>
+                      <span className="exp-company">{exp.company}</span>
+                    </div>
+                    <div className="exp-meta">
+                      <span>{exp.location}</span>
+                      <span>{exp.period}</span>
+                    </div>
+                    <ul className="exp-points">
+                      {exp.points.map((pt, j) => (
+                        <li key={j}>{pt}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="about-stats">
-              <div className="stat">
-                <div className="stat-value">[X]</div>
-                <div className="stat-label">publications</div>
+            {/* Certifications Panel */}
+            <div className="certifications-panel">
+              <div className="section-header">
+                <h2>certifications</h2>
+                <div className="header-line"></div>
               </div>
-              <div className="stat">
-                <div className="stat-value">[X]</div>
-                <div className="stat-label">projects</div>
-              </div>
-              <div className="stat">
-                <div className="stat-value">[X]</div>
-                <div className="stat-label">years in tech</div>
+              <div className="certifications-grid">
+                {certifications.map((cert, i) => (
+                  <div key={i} className="cert-card">
+                    <div className="cert-icon">//</div>
+                    <div className="cert-title">{cert}</div>
+                  </div>
+                ))}
               </div>
             </div>
+
           </div>
         </div>
       </section>
 
-      {/* Contact */}
+      {/* Contact Section */}
       <section id="contact" className="contact">
         <div className="container">
           <div className="section-header">
@@ -218,12 +567,17 @@ export default function App() {
           </div>
 
           <div className="contact-content">
-            <p>Open to collaborations, research opportunities, and technical discussions.</p>
+            <p>I am open to discussions regarding internship collaborations, robotic system designs, AI implementations, or sensor integrations. Drop a line to start a dialogue.</p>
+            
+            <div className="contact-details" style={{ margin: '30px auto', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', fontFamily: 'JetBrains Mono', fontSize: '13px' }}>
+              <div><span style={{ color: 'var(--accent)' }}>primary_email //</span> <a href="mailto:anandhupulikkl22@gmail.com">anandhupulikkl22@gmail.com</a></div>
+              <div><span style={{ color: 'var(--accent)' }}>academic_email //</span> <a href="mailto:24b771.anandhu@gectcr.ac.in">24b771.anandhu@gectcr.ac.in</a></div>
+              <div><span style={{ color: 'var(--accent)' }}>alternate_email //</span> <a href="mailto:anandhup167@gmail.com">anandhup167@gmail.com</a></div>
+            </div>
+
             <div className="social-links">
-              <a href="mailto:email@example.com" className="social-link">email</a>
-              <a href="#" className="social-link">github</a>
-              <a href="#" className="social-link">linkedin</a>
-              <a href="#" className="social-link">google scholar</a>
+              <a href="https://github.com/anandh0u" target="_blank" rel="noopener noreferrer" className="social-link">github</a>
+              <a href="https://www.linkedin.com/in/anandhu-p-6ba98231a/" target="_blank" rel="noopener noreferrer" className="social-link">linkedin</a>
             </div>
           </div>
         </div>
@@ -232,9 +586,9 @@ export default function App() {
       {/* Footer */}
       <footer className="footer">
         <div className="container">
-          <p>&copy; 2025. Built with purpose.</p>
+          <p>&copy; {new Date().getFullYear()} Anandhu P. Engineered with modern dark components.</p>
         </div>
       </footer>
     </div>
-  )
+  );
 }

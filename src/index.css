@@ -7,18 +7,29 @@
 }
 
 :root {
-  --bg: #0a0e1a;
-  --bg-alt: #141829;
-  --text: #e8ecf1;
-  --text-secondary: #a8b5c9;
-  --accent: #00d9ff;
-  --accent-subtle: rgba(0, 217, 255, 0.1);
-  --border: rgba(0, 217, 255, 0.15);
-  --transition: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --bg: #05020c; /* Deep dark cosmic space background */
+  --bg-alt: #0e071b; /* Dark purple container panels background */
+  --text: #f3f4f6;
+  --text-secondary: #9fa2b2;
+  --accent: #00f0ff; /* Neon Cyber Cyan */
+  --accent-secondary: #ff007f; /* Neon Cyber Pink */
+  --accent-subtle: rgba(0, 240, 255, 0.03);
+  --border: rgba(0, 240, 255, 0.08);
+  --border-hover: rgba(0, 240, 255, 0.35);
+  --glass-bg: rgba(13, 8, 28, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-blur: blur(16px);
+  --transition: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+::selection {
+  background: var(--accent-secondary);
+  color: #ffffff;
 }
 
 body {
