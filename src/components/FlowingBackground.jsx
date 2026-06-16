@@ -22,15 +22,15 @@ export default function FlowingBackground() {
 
     // Sakura colors (various soft pinks and blushes)
     const COLORS = [
-      'rgba(255, 183, 197, 0.85)', // Cherry Pink
-      'rgba(255, 166, 201, 0.80)', // Bright Blossom Pink
-      'rgba(255, 204, 213, 0.90)', // Soft White-Pink
-      'rgba(255, 105, 180, 0.75)', // Hot Pink highlight
-      'rgba(244, 154, 193, 0.85)'  // Classic Sakura
+      'rgba(255, 183, 197, 0.56)', // Cherry Pink
+      'rgba(255, 166, 201, 0.52)', // Bright Blossom Pink
+      'rgba(255, 204, 213, 0.60)', // Soft White-Pink
+      'rgba(255, 105, 180, 0.42)', // Hot Pink highlight
+      'rgba(244, 154, 193, 0.55)'  // Classic Sakura
     ]
 
     // Petal configuration
-    const maxPetals = 70
+    const maxPetals = 36
     const petals = []
 
     class Petal {
@@ -115,8 +115,8 @@ export default function FlowingBackground() {
         c.fillStyle = this.color
         
         // Optional pink shadow blur for premium glowing look
-        c.shadowBlur = 4
-        c.shadowColor = 'rgba(255, 183, 197, 0.4)'
+        c.shadowBlur = 2
+        c.shadowColor = 'rgba(255, 183, 197, 0.22)'
 
         // Procedural sakura petal drawing with split/notched tip
         c.moveTo(0, 0)
@@ -189,8 +189,8 @@ export default function FlowingBackground() {
             p.x, p.y - 200, 0,
             p.x, p.y - 200, p.size * 8
           )
-          glowGrad.addColorStop(0, 'rgba(255, 183, 197, 0.05)')
-          glowGrad.addColorStop(0.5, 'rgba(255, 166, 201, 0.02)')
+          glowGrad.addColorStop(0, 'rgba(255, 183, 197, 0.025)')
+          glowGrad.addColorStop(0.5, 'rgba(255, 166, 201, 0.01)')
           glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)')
           
           ctx.fillStyle = glowGrad

@@ -60,11 +60,11 @@ export default function WelcomeScreen({ onEnter }) {
     
     // Sakura colors (various soft pinks and blushes)
     const COLORS = [
-      'rgba(255, 183, 197, 0.85)', // Cherry Pink
-      'rgba(255, 166, 201, 0.80)', // Bright Blossom Pink
-      'rgba(255, 204, 213, 0.90)', // Soft White-Pink
-      'rgba(255, 105, 180, 0.75)', // Hot Pink highlight
-      'rgba(244, 154, 193, 0.85)'  // Classic Sakura
+      'rgba(255, 183, 197, 0.58)', // Cherry Pink
+      'rgba(255, 166, 201, 0.54)', // Bright Blossom Pink
+      'rgba(255, 204, 213, 0.62)', // Soft White-Pink
+      'rgba(255, 105, 180, 0.44)', // Hot Pink highlight
+      'rgba(244, 154, 193, 0.56)'  // Classic Sakura
     ]
     
     let globalFogDensity = 0 // Blackout overlay density
@@ -172,8 +172,8 @@ export default function WelcomeScreen({ onEnter }) {
         
         c.beginPath()
         c.fillStyle = this.color
-        c.shadowBlur = 4
-        c.shadowColor = 'rgba(255, 183, 197, 0.4)'
+        c.shadowBlur = 2
+        c.shadowColor = 'rgba(255, 183, 197, 0.22)'
         
         c.moveTo(0, 0)
         c.bezierCurveTo(
@@ -199,8 +199,8 @@ export default function WelcomeScreen({ onEnter }) {
     
     // Sakura petals collection
     let petals = []
-    const maxIdlePetals = 60
-    const maxTransitionPetals = 500
+    const maxIdlePetals = 32
+    const maxTransitionPetals = 260
     
     for (let i = 0; i < maxIdlePetals; i++) {
       petals.push(new SakuraPetal(false))
@@ -215,8 +215,8 @@ export default function WelcomeScreen({ onEnter }) {
         // Trigger initial blast once at start of transition
         if (!hasTriggeredBlast) {
           hasTriggeredBlast = true
-          // Spawn a massive burst of 350 petals instantly at the center
-          for (let i = 0; i < 350; i++) {
+          // Spawn a softer burst of petals at the center
+          for (let i = 0; i < 140; i++) {
             const angle = Math.random() * Math.PI * 2
             const speed = Math.random() * 14 + 6
             const petal = new SakuraPetal(true)
@@ -233,9 +233,9 @@ export default function WelcomeScreen({ onEnter }) {
         // Increase blackout overlay density
         globalFogDensity = Math.min(globalFogDensity + 0.008, 1.0)
         
-        // Rapidly spawn extra petals for the blizzard storm
+        // Spawn a lighter follow-up breeze of petals
         if (petals.length < maxTransitionPetals) {
-          const spawnCount = Math.min(10, maxTransitionPetals - petals.length)
+          const spawnCount = Math.min(5, maxTransitionPetals - petals.length)
           for (let i = 0; i < spawnCount; i++) {
             petals.push(new SakuraPetal(true))
           }
