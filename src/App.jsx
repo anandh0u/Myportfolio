@@ -9,8 +9,6 @@ export default function App() {
   const [activeNav, setActiveNav] = useState('home')
   const [activeCategory, setActiveCategory] = useState('all')
   const [scrollWidth, setScrollWidth] = useState(0)
-  const [activePaperId, setActivePaperId] = useState(null)
-  const [copiedPaperId, setCopiedPaperId] = useState(null)
 
   // Interactive Terminal State
   const [consoleHistory, setConsoleHistory] = useState([
@@ -40,31 +38,14 @@ export default function App() {
     setActiveNav(id)
   }
 
-  const copyCitation = (id, text) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopiedPaperId(id)
-      setTimeout(() => {
-        setCopiedPaperId(null)
-      }, 2000)
-    })
-  }
-
   // Predefined terminal command responses
   const COMMAND_RESPONSES = {
     help: [
       { text: 'Available system query logs:', type: 'success' },
       { text: '  about      - Display biographic profile narrative', type: 'system' },
-      { text: '  research   - Query academic publications and preprints', type: 'system' },
       { text: '  skills     - List active technical domains and expertise', type: 'system' },
       { text: '  status     - Show current academic enrollment metrics', type: 'system' },
       { text: '  clear      - Clear terminal screen log', type: 'system' }
-    ],
-    research: [
-      { text: 'Academic Publications & Preprints:', type: 'success' },
-      { text: '  1. Non-Anthropomorphic Bipedal Robotic System (NCREEE \'19)', type: 'system' },
-      { text: '  2. Speed & Direction Control of DC Motor via Wireless (NCREEE \'19)', type: 'system' },
-      { text: '  3. Intelligent Threat Classification in Cyber-Physical Nodes (Preprint \'26)', type: 'system' },
-      { text: '  Type "query_sys --target <id>" or explore the Research section below.', type: 'info' }
     ],
     about: [
       { text: 'Profile Narrative:', type: 'success' },
@@ -134,42 +115,6 @@ export default function App() {
       }
     }, 60)
   }
-
-  const researchPapers = [
-    {
-      id: 'bipedal-robot',
-      title: 'Non-Anthropomorphic Bipedal Robotic System',
-      authors: 'Amal R, Anandhu P Shaju, Jibin Thomas, Vishnu S, Anjana Manuel',
-      venue: 'National Conference on Recent Advances in Electrical and Electronics Engineering (NCREEE \'19)',
-      year: 2019,
-      abstract: 'A hybrid bipedal-wheeled robotic system designed to address the stability and motion limits of traditional anthropomorphic legged robots. By placing limbs in the sagittal plane and integrating wheeled drive units at contact points, the system achieves higher translation velocities and reduces hip-offset oscillations while maintaining vertical climbing and adaptability in uneven terrains.',
-      tags: ['Robotics', 'Kinematics', 'Hybrid Locomotion', 'Control Systems'],
-      link: 'https://mbcpeermade.com',
-      citation: 'Amal R, Anandhu P Shaju, Jibin Thomas, Vishnu S, Anjana Manuel. "Non-Anthropomorphic Bipedal Robotic System." NCREEE, 2019.'
-    },
-    {
-      id: 'dc-motor',
-      title: 'Speed and Direction Control of DC Motor through Wireless Communication',
-      authors: 'Anandhu P Shaju, Amal R, Jibin Thomas, Vishnu S, Anjana Manuel',
-      venue: 'National Conference on Recent Advances in Electrical and Electronics Engineering (NCREEE \'19)',
-      year: 2019,
-      abstract: 'Details the deployment of a wireless microcontroller-actuated system for DC motor velocity and direction profiling. Utilizing low-latency telemetry protocols, the system allows remote operators to query real-time angular feedback metrics and issue direct command overrides to maintain motor synchronization under varying payload boundaries.',
-      tags: ['Wireless Telemetry', 'ESP8266', 'DC Motors', 'Embedded Systems'],
-      link: 'https://mbcpeermade.com',
-      citation: 'Anandhu P Shaju, Amal R, Jibin Thomas, Vishnu S, Anjana Manuel. "Speed and Direction Control of DC Motor through Wireless Communication." NCREEE, 2019.'
-    },
-    {
-      id: 'threat-classification',
-      title: 'Intelligent Threat Classification in Cyber-Physical Nodes using LLM Reasoning',
-      authors: 'Anandhu P, et al.',
-      venue: 'Preprint / Technical Report',
-      year: 2026,
-      abstract: 'Explores the integration of lightweight reasoning agents on edge nodes in industrial micro-grids. The paper details how local threat models query the security state of AUBO controllers and ESP8266 networks, utilizing LLM-guided context extraction to identify telemetry spoofing and initiate rapid containment protocols.',
-      tags: ['AI Agents', 'Cyber-Physical Security', 'Threat Classification', 'Embedded Security'],
-      link: 'https://github.com/anandh0u',
-      citation: 'Anandhu P, et al. "Intelligent Threat Classification in Cyber-Physical Nodes using LLM Reasoning." Preprint, 2026.'
-    }
-  ];
 
   const technicalProjects = [
     {
@@ -316,7 +261,7 @@ export default function App() {
               </div>
             </div>
             <nav className="nav-links">
-              {['home', 'about', 'publications', 'projects', 'skills', 'experience', 'contact'].map((item) => (
+              {['home', 'about', 'projects', 'skills', 'experience', 'contact'].map((item) => (
                 <button
                   key={item}
                   id={`nav-btn-${item}`}
@@ -412,7 +357,7 @@ export default function App() {
                   flexWrap: 'wrap'
                 }}>
                   <span style={{ fontFamily: 'JetBrains Mono', fontSize: '11px', color: 'var(--text-secondary)' }}>Quick query:</span>
-                  {['about', 'research', 'skills', 'status', 'clear'].map((cmd) => (
+                  {['about', 'skills', 'status', 'clear'].map((cmd) => (
                     <button 
                       key={cmd}
                       id={`terminal-shortcut-${cmd}`}
@@ -510,85 +455,6 @@ export default function App() {
                 <div className="stat-label">professional certifications and credentials</div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Research & Publications Section */}
-      <section id="publications" className="research">
-        <div className="container">
-          <div className="section-header-row">
-            <div className="section-header">
-              <h2>publications</h2>
-              <div className="header-line"></div>
-            </div>
-            <div className="section-robot-wrapper">
-              <SectionRobot action="reading" />
-            </div>
-          </div>
-
-          <div className="research-grid">
-            {researchPapers.map((paper) => {
-              const isExpanded = activePaperId === paper.id;
-              const isCopied = copiedPaperId === paper.id;
-              
-              return (
-                <div key={paper.id} className={`research-card ${isExpanded ? 'expanded' : ''}`}>
-                  <div className="research-header">
-                    <div className="research-meta">
-                      <span className="research-year">{paper.year}</span>
-                      <span className="research-divider">//</span>
-                      <span className="research-venue">{paper.venue}</span>
-                    </div>
-                    <h3 className="research-title">{paper.title}</h3>
-                    <p className="research-authors">{paper.authors}</p>
-                  </div>
-                  
-                  <div className="research-tags">
-                    {paper.tags.map((tag, idx) => (
-                      <span key={idx} className="tag">{tag}</span>
-                    ))}
-                  </div>
-
-                  <div className="research-actions">
-                    <button 
-                      id={`research-abstract-toggle-${paper.id}`}
-                      className={`btn-action toggle-abstract ${isExpanded ? 'active' : ''}`}
-                      onClick={() => setActivePaperId(isExpanded ? null : paper.id)}
-                    >
-                      {isExpanded ? '[ hide abstract ]' : '[ view abstract ]'}
-                    </button>
-                    <button 
-                      id={`research-citation-copy-${paper.id}`}
-                      className={`btn-action copy-citation ${isCopied ? 'copied' : ''}`}
-                      onClick={() => copyCitation(paper.id, paper.citation)}
-                    >
-                      {isCopied ? '[ copied! ]' : '[ copy citation ]'}
-                    </button>
-                    <a 
-                      id={`research-link-${paper.id}`}
-                      href={paper.link} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="research-link-btn"
-                    >
-                      [ link ]
-                    </a>
-                  </div>
-
-                  <div className={`abstract-drawer ${isExpanded ? 'open' : ''}`}>
-                    <div className="abstract-content">
-                      <h4>Abstract</h4>
-                      <p>{paper.abstract}</p>
-                      <div className="citation-preview">
-                        <h5>Citation (IEEE format)</h5>
-                        <code>{paper.citation}</code>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </div>
       </section>
