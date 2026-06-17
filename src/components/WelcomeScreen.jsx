@@ -182,12 +182,14 @@ export default function WelcomeScreen({ onEnter }) {
         // --- 1. DRAW FLOATING SHADOW ---
         ctx.save()
         const distanceToFloor = Math.max(0, robot.floorY - y)
-        const shadowOpacity = Math.max(0.08, 0.45 * (1 - distanceToFloor / 400))
-        const shadowW = Math.max(12, 38 * scale * (1 - distanceToFloor / 500))
+        const shadowScale = Math.max(0.12, Math.min(1, 1 - distanceToFloor / 500))
+        const shadowOpacity = Math.max(0.08, 0.45 * shadowScale)
+        const shadowW = Math.max(12, 38 * scale * shadowScale)
+        const shadowH = Math.max(1, 5.5 * scale * shadowScale)
         ctx.translate(x, robot.floorY + 28 * scale)
         ctx.fillStyle = `rgba(3, 1, 8, ${shadowOpacity})`
         ctx.beginPath()
-        ctx.ellipse(0, 0, shadowW, 5.5 * scale * (1 - distanceToFloor / 500), 0, 0, Math.PI * 2)
+        ctx.ellipse(0, 0, shadowW, shadowH, 0, 0, Math.PI * 2)
         ctx.fill()
         ctx.restore()
 
