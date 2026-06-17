@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Lexend:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 * {
   margin: 0;
@@ -12,7 +12,7 @@
   --text: #f3f4f6;
   --text-secondary: #9fa2b2;
   --accent: #00f0ff; /* Neon Cyber Cyan */
-  --accent-secondary: #ff007f; /* Neon Cyber Pink */
+  --accent-secondary: #6366f1; /* Professional Cyber Indigo */
   --accent-subtle: rgba(0, 240, 255, 0.03);
   --border: rgba(0, 240, 255, 0.08);
   --border-hover: rgba(0, 240, 255, 0.35);
@@ -35,8 +35,8 @@ html {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Lexend', sans-serif;
-  line-height: 1.6;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.65;
   overflow-x: hidden;
 }
 
