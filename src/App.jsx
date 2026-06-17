@@ -316,7 +316,7 @@ export default function App() {
               </div>
             </div>
             <nav className="nav-links">
-              {['home', 'about', 'research', 'projects', 'expertise', 'experience'].map((item) => (
+              {['home', 'about', 'publications', 'projects', 'skills', 'experience', 'contact'].map((item) => (
                 <button
                   key={item}
                   id={`nav-btn-${item}`}
@@ -515,7 +515,7 @@ export default function App() {
       </section>
 
       {/* Research & Publications Section */}
-      <section id="research" className="research">
+      <section id="publications" className="research">
         <div className="container">
           <div className="section-header-row">
             <div className="section-header">
@@ -644,7 +644,7 @@ export default function App() {
       </section>
 
       {/* Expertise Section */}
-      <section id="expertise" className="expertise">
+      <section id="skills" className="expertise">
         <div className="container">
           <div className="section-header-row">
             <div className="section-header">

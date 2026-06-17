@@ -4,18 +4,17 @@ export default function SectionRobot({ action = 'coffee' }) {
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
   const requestRef = useRef(null)
-  const [isVisible, setIsVisible] = useState(false)
+  const [flightPhase, setFlightPhase] = useState('idle') // idle, entering, exiting
   const [shouldRender, setShouldRender] = useState(false)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true)
           setShouldRender(true)
         } else {
-          setIsVisible(false)
           setShouldRender(false)
+          setFlightPhase('idle')
         }
       },
       { threshold: 0.1 }
@@ -34,31 +33,39 @@ export default function SectionRobot({ action = 'coffee' }) {
 
     let activeTimeout
     let innerTimeout
+    let resetTimeout
 
-    // Initial show for 10 seconds
-    setIsVisible(true)
+    // Swoop in immediately on scroll entry
+    setFlightPhase('entering')
 
     const triggerNextCycle = () => {
       // Wait for a random interval between 20 and 30 seconds
       const nextDelay = 20000 + Math.random() * 10000 // 20s to 30s
       activeTimeout = setTimeout(() => {
-        setIsVisible(true)
+        setFlightPhase('entering')
         innerTimeout = setTimeout(() => {
-          setIsVisible(false)
-          triggerNextCycle()
+          setFlightPhase('exiting')
+          resetTimeout = setTimeout(() => {
+            setFlightPhase('idle')
+            triggerNextCycle()
+          }, 1000) // Match CSS transition duration
         }, 5000) // Stay active for 5 seconds
       }, nextDelay)
     }
 
     // Hide after 10 seconds initially
     activeTimeout = setTimeout(() => {
-      setIsVisible(false)
-      triggerNextCycle()
+      setFlightPhase('exiting')
+      resetTimeout = setTimeout(() => {
+        setFlightPhase('idle')
+        triggerNextCycle()
+      }, 1000)
     }, 10000)
 
     return () => {
       clearTimeout(activeTimeout)
       clearTimeout(innerTimeout)
+      clearTimeout(resetTimeout)
     }
   }, [shouldRender])
 
@@ -284,6 +291,20 @@ export default function SectionRobot({ action = 'coffee' }) {
 
       // Draw EVE body capsule gradient helper
       const drawEVEBody = (taperScaleX = 1.0) => {
+        // --- HOVER THRUSTER FLAME ---
+        ctx.save()
+        ctx.translate(0, 24 * scale) // Translate to bottom of EVE body
+        const flameGrad = ctx.createLinearGradient(0, 0, 0, 9 * scale)
+        flameGrad.addColorStop(0, 'rgba(0, 240, 255, 0.7)')
+        flameGrad.addColorStop(0.4, 'rgba(255, 0, 127, 0.45)')
+        flameGrad.addColorStop(1, 'rgba(255, 0, 127, 0)')
+        ctx.fillStyle = flameGrad
+        ctx.beginPath()
+        ctx.moveTo(-4 * scale, 0)
+        ctx.quadraticCurveTo(0, (5 + Math.sin(time * 0.4) * 2) * scale, 4 * scale, 0)
+        ctx.fill()
+        ctx.restore()
+
         const bodyGrad = ctx.createRadialGradient(-4 * scale, -6 * scale, 2 * scale, 0, 6 * scale, 25 * scale)
         bodyGrad.addColorStop(0, '#ffffff')
         bodyGrad.addColorStop(0.7, '#f8fafc')
@@ -653,22 +674,42 @@ export default function SectionRobot({ action = 'coffee' }) {
     return () => cancelAnimationFrame(requestRef.current)
   }, [action])
 
+  const getContainerStyle = () => {
+    const baseStyle = {
+      display: 'inline-block',
+      verticalAlign: 'middle',
+      width: '150px',
+      height: '150px',
+      pointerEvents: flightPhase === 'entering' ? 'auto' : 'none',
+    }
+
+    if (flightPhase === 'entering') {
+      return {
+        ...baseStyle,
+        opacity: 1,
+        transform: 'scale(1) translate(0, 0) rotate(0deg)',
+        transition: 'opacity 1.0s cubic-bezier(0.19, 1, 0.22, 1), transform 1.0s cubic-bezier(0.19, 1, 0.22, 1)',
+      }
+    } else if (flightPhase === 'exiting') {
+      return {
+        ...baseStyle,
+        opacity: 0,
+        transform: 'scale(0.35) translate(-90px, -20px) rotate(-15deg)',
+        transition: 'opacity 1.0s cubic-bezier(0.19, 1, 0.22, 1), transform 1.0s cubic-bezier(0.19, 1, 0.22, 1)',
+      }
+    } else {
+      // idle state (staged on the right side, off-screen)
+      return {
+        ...baseStyle,
+        opacity: 0,
+        transform: 'scale(0.35) translate(90px, 20px) rotate(15deg)',
+        transition: 'none',
+      }
+    }
+  }
+
   return (
-    <div
-      ref={containerRef}
-      style={{
-        display: 'inline-block',
-        verticalAlign: 'middle',
-        transition: 'opacity 0.6s var(--transition), transform 0.6s var(--transition)',
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible 
-          ? 'scale(1) translateY(0) rotate(0deg)' 
-          : 'scale(0.5) translateY(45px) rotate(-12deg)',
-        pointerEvents: isVisible ? 'auto' : 'none',
-        width: '150px',
-        height: '150px',
-      }}
-    >
+    <div ref={containerRef} style={getContainerStyle()}>
       <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
     </div>
   )

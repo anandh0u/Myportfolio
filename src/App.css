@@ -118,10 +118,10 @@
 
 /* ─── HERO ─── */
 .hero {
-  min-height: 100vh;
+  min-height: 90vh;
   display: flex;
   align-items: center;
-  padding-top: 80px;
+  padding: 40px 0;
   position: relative;
   overflow: hidden;
 }
@@ -159,10 +159,10 @@
 
 .hero-title {
   font-family: 'Syne', sans-serif;
-  font-size: 56px;
+  font-size: 48px;
   font-weight: 800;
-  line-height: 1.15;
-  margin-bottom: 24px;
+  line-height: 1.1;
+  margin-bottom: 16px;
   letter-spacing: -1.5px;
   color: var(--text);
 }
@@ -172,16 +172,16 @@
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-size: 48px;
-  margin-top: 8px;
+  font-size: 38px;
+  margin-top: 6px;
   font-weight: 800;
 }
 
 .hero-subtitle {
-  font-size: 15px;
+  font-size: 14.5px;
   color: var(--text-secondary);
-  margin-bottom: 40px;
-  line-height: 1.8;
+  margin-bottom: 24px;
+  line-height: 1.7;
   max-width: 520px;
 }
 
@@ -290,12 +290,12 @@
 }
 
 .console-body {
-  padding: 24px;
+  padding: 18px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  line-height: 1.7;
+  font-size: 12.5px;
+  line-height: 1.6;
   color: #a5b4fc;
-  min-height: 280px;
+  min-height: 220px;
   text-align: left;
 }
 
@@ -1021,7 +1021,7 @@
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  transition: opacity 1s var(--transition);
+  transition: opacity 0.5s var(--transition);
 }
 
 .welcome-overlay.fade-out {
@@ -1057,7 +1057,7 @@
   height: 100%;
   position: relative;
   background: #070312;
-  transition: transform 1.8s cubic-bezier(0.77, 0, 0.175, 1), opacity 1.8s ease;
+  transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1), opacity 1.2s ease;
   overflow: hidden;
 }
 

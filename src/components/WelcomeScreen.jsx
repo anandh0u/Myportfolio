@@ -105,7 +105,7 @@ export default function WelcomeScreen({ onEnter }) {
           }
         } else if (robot.state === 'standing') {
           // Recover from squish slowly
-          robot.squish += (1.0 - robot.squish) * 0.15
+          robot.squish += (1.0 - robot.squish) * 0.25
           if (Math.abs(robot.squish - 1.0) < 0.02) {
             robot.squish = 1.0
             robot.state = 'confused'
@@ -113,9 +113,9 @@ export default function WelcomeScreen({ onEnter }) {
           }
         } else if (robot.state === 'confused') {
           robot.stateTime++
-          // Head shake and eye look around (60 frames ~1s)
-          robot.eyeOffsetX = Math.sin(robot.time * 0.15) * 8
-          if (robot.stateTime > 60) {
+          // Head shake and eye look around (25 frames ~0.4s)
+          robot.eyeOffsetX = Math.sin(robot.time * 0.25) * 8
+          if (robot.stateTime > 25) {
             robot.state = 'hi'
             robot.stateTime = 0
             robot.eyeOffsetX = 0
@@ -123,15 +123,15 @@ export default function WelcomeScreen({ onEnter }) {
           }
         } else if (robot.state === 'hi') {
           robot.stateTime++
-          // Wave and say hi (80 frames ~1.3s)
-          if (robot.stateTime > 80) {
+          // Wave and say hi (40 frames ~0.6s)
+          if (robot.stateTime > 40) {
             robot.state = 'running'
             robot.stateTime = 0
             robot.showBubble = false
           }
         } else if (robot.state === 'running') {
-          // Run off screen
-          robot.runSpeed = Math.min(robot.runSpeed + 0.6, 12)
+          // Run/Float off screen quickly
+          robot.runSpeed = Math.min(robot.runSpeed + 1.2, 20)
           robot.x += robot.runSpeed
           
           // Trigger door open & profile popup when robot leaves screen
@@ -147,7 +147,7 @@ export default function WelcomeScreen({ onEnter }) {
               setTimeout(() => {
                 setIsVisible(false)
               }, 1000)
-            }, 500)
+            }, 50)
           }
         }
         
