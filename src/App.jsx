@@ -596,9 +596,14 @@ export default function App() {
       {/* Featured Projects Section */}
       <section id="projects" className="projects">
         <div className="container">
-          <div className="section-header">
-            <h2>featured projects</h2>
-            <div className="header-line"></div>
+          <div className="section-header-row">
+            <div className="section-header">
+              <h2>featured projects</h2>
+              <div className="header-line"></div>
+            </div>
+            <div className="section-robot-wrapper">
+              <SectionRobot action="building" />
+            </div>
           </div>
 
           {/* Filtering Tabs */}
@@ -673,9 +678,14 @@ export default function App() {
             
             {/* Experience Panel */}
             <div className="experience-panel">
-              <div className="section-header">
-                <h2>experience</h2>
-                <div className="header-line"></div>
+              <div className="section-header-row">
+                <div className="section-header">
+                  <h2>experience</h2>
+                  <div className="header-line"></div>
+                </div>
+                <div className="section-robot-wrapper">
+                  <SectionRobot action="leading" />
+                </div>
               </div>
               <div className="experience-list">
                 {experience.map((exp, i) => (
@@ -722,9 +732,14 @@ export default function App() {
       {/* Contact Section */}
       <section id="contact" className="contact">
         <div className="container">
-          <div className="section-header">
-            <h2>get in touch</h2>
-            <div className="header-line"></div>
+          <div className="section-header-row">
+            <div className="section-header">
+              <h2>get in touch</h2>
+              <div className="header-line"></div>
+            </div>
+            <div className="section-robot-wrapper">
+              <SectionRobot action="wave" />
+            </div>
           </div>
 
           <div className="contact-content">

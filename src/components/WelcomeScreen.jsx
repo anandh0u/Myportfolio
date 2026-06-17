@@ -179,141 +179,198 @@ export default function WelcomeScreen({ onEnter }) {
           ctx.restore()
         }
         
-        // --- DRAW ROBOT BASE/WHEELS ---
+        // --- 1. DRAW FLOATING SHADOW ---
         ctx.save()
-        ctx.translate(x, y + 42 * scale)
-        ctx.scale(1, squish)
-        ctx.fillStyle = '#334155'
+        const distanceToFloor = Math.max(0, robot.floorY - y)
+        const shadowOpacity = Math.max(0.08, 0.45 * (1 - distanceToFloor / 400))
+        const shadowW = Math.max(12, 38 * scale * (1 - distanceToFloor / 500))
+        ctx.translate(x, robot.floorY + 28 * scale)
+        ctx.fillStyle = `rgba(3, 1, 8, ${shadowOpacity})`
         ctx.beginPath()
-        ctx.roundRect(-30 * scale, -8 * scale, 60 * scale, 16 * scale, 8 * scale)
+        ctx.ellipse(0, 0, shadowW, 5.5 * scale * (1 - distanceToFloor / 500), 0, 0, Math.PI * 2)
         ctx.fill()
-        
-        // Little wheels rolling if running
-        ctx.fillStyle = '#0f172a'
-        const wheelRotation = state === 'running' ? (time * 0.3) % (Math.PI * 2) : 0
-        for (let i = -18; i <= 18; i += 18) {
+        ctx.restore()
+
+        // --- 2. DRAW THRUSTER FIRE (if falling/decelerating) ---
+        if (state === 'falling' || state === 'standing') {
           ctx.save()
-          ctx.translate(i * scale, 0)
-          ctx.rotate(wheelRotation)
+          ctx.translate(x, y + 42 * scale * squish)
+          const thrusterGrad = ctx.createLinearGradient(0, 0, 0, 22 * scale)
+          thrusterGrad.addColorStop(0, '#00f0ff')
+          thrusterGrad.addColorStop(0.4, 'rgba(255, 0, 127, 0.75)')
+          thrusterGrad.addColorStop(1, 'rgba(255, 0, 127, 0)')
+          ctx.fillStyle = thrusterGrad
           ctx.beginPath()
-          ctx.arc(0, 0, 5 * scale, 0, Math.PI * 2)
+          ctx.moveTo(-7 * scale, 0)
+          ctx.quadraticCurveTo(0, (20 + Math.random() * 8) * scale, 7 * scale, 0)
           ctx.fill()
-          ctx.fillStyle = '#ffffff'
-          ctx.fillRect(-1 * scale, -4 * scale, 2 * scale, 8 * scale)
           ctx.restore()
         }
-        ctx.restore()
 
-        // --- DRAW ROBOT ARMS ---
-        // Left arm waving or running
+        // --- 3. DRAW ARMS ---
+        // Left Arm
         ctx.save()
-        ctx.translate(x - 45 * scale, y - 5 * scale)
+        ctx.translate(x - 45 * scale, y + 6 * scale)
         if (state === 'hi') {
           // Wave arm up and down
-          const waveAngle = Math.sin(time * 0.15) * 0.6 - 0.9
+          const waveAngle = Math.sin(time * 0.15) * 0.6 - 0.95
           ctx.rotate(waveAngle)
         } else if (state === 'running') {
-          ctx.rotate(Math.sin(time * 0.25) * 0.6)
+          ctx.rotate(0.35 + Math.sin(time * 0.25) * 0.65)
+        } else {
+          ctx.rotate(0.1)
         }
-        ctx.fillStyle = '#ffffff'
+        const armGradLeft = ctx.createLinearGradient(-8 * scale, -16 * scale, 8 * scale, 20 * scale)
+        armGradLeft.addColorStop(0, '#ffffff')
+        armGradLeft.addColorStop(1, '#94a3b8')
+        ctx.fillStyle = armGradLeft
         ctx.beginPath()
-        ctx.roundRect(-7 * scale, -12 * scale, 14 * scale, 34 * scale, 7 * scale)
+        ctx.ellipse(0, 0, 8 * scale, 24 * scale, 0, 0, Math.PI * 2)
         ctx.fill()
         ctx.strokeStyle = '#cbd5e1'
-        ctx.lineWidth = 1.5
+        ctx.lineWidth = 0.8
         ctx.stroke()
         ctx.restore()
 
-        // Right arm
+        // Right Arm
         ctx.save()
-        ctx.translate(x + 45 * scale, y - 5 * scale)
+        ctx.translate(x + 45 * scale, y + 6 * scale)
         if (state === 'running') {
-          ctx.rotate(-Math.sin(time * 0.25) * 0.6)
+          ctx.rotate(-0.35 - Math.sin(time * 0.25) * 0.65)
+        } else {
+          ctx.rotate(-0.1)
         }
-        ctx.fillStyle = '#ffffff'
+        const armGradRight = ctx.createLinearGradient(-8 * scale, -16 * scale, 8 * scale, 20 * scale)
+        armGradRight.addColorStop(0, '#ffffff')
+        armGradRight.addColorStop(1, '#94a3b8')
+        ctx.fillStyle = armGradRight
         ctx.beginPath()
-        ctx.roundRect(-7 * scale, -12 * scale, 14 * scale, 34 * scale, 7 * scale)
+        ctx.ellipse(0, 0, 8 * scale, 24 * scale, 0, 0, Math.PI * 2)
         ctx.fill()
         ctx.strokeStyle = '#cbd5e1'
-        ctx.lineWidth = 1.5
+        ctx.lineWidth = 0.8
         ctx.stroke()
         ctx.restore()
 
-        // --- DRAW ROBOT BODY ---
+        // --- 4. DRAW BODY ---
         ctx.save()
         ctx.translate(x, y)
         ctx.scale(1, squish)
-        ctx.fillStyle = '#ffffff'
+        const bodyGrad = ctx.createRadialGradient(-6 * scale, -10 * scale, 3 * scale, 0, 10 * scale, 40 * scale)
+        bodyGrad.addColorStop(0, '#ffffff')
+        bodyGrad.addColorStop(0.7, '#f8fafc')
+        bodyGrad.addColorStop(1, '#94a3b8')
+        ctx.fillStyle = bodyGrad
         ctx.beginPath()
-        ctx.roundRect(-36 * scale, -22 * scale, 72 * scale, 64 * scale, 22 * scale)
+        ctx.ellipse(0, 10 * scale, 34 * scale, 38 * scale, 0, 0, Math.PI * 2)
         ctx.fill()
         ctx.strokeStyle = '#cbd5e1'
-        ctx.lineWidth = 1.5
+        ctx.lineWidth = 0.8
         ctx.stroke()
 
-        // Chest Screen
+        // Highlight layer on body
+        const bodyHighlight = ctx.createLinearGradient(0, -10 * scale, 0, 20 * scale)
+        bodyHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.4)')
+        bodyHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)')
+        ctx.fillStyle = bodyHighlight
+        ctx.beginPath()
+        ctx.ellipse(0, 0 * scale, 24 * scale, 18 * scale, 0, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Chest Screen (Indicator)
         ctx.fillStyle = '#1e1b4b'
         ctx.beginPath()
-        ctx.roundRect(-18 * scale, -10 * scale, 36 * scale, 22 * scale, 5 * scale)
+        ctx.roundRect(-18 * scale, -4 * scale, 36 * scale, 22 * scale, 5 * scale)
         ctx.fill()
-        // Chest Heartbeat / Wave
+        
+        // Heartbeat wave pulse
         ctx.strokeStyle = '#ff007f'
         ctx.lineWidth = 1.5
         ctx.beginPath()
-        ctx.moveTo(-13 * scale, 1 * scale)
-        ctx.lineTo(-5 * scale, 1 * scale)
-        ctx.lineTo(-2 * scale, -6 * scale)
-        ctx.lineTo(2 * scale, 7 * scale)
-        ctx.lineTo(5 * scale, 1 * scale)
-        ctx.lineTo(13 * scale, 1 * scale)
+        ctx.moveTo(-13 * scale, 7 * scale)
+        ctx.lineTo(-5 * scale, 7 * scale)
+        ctx.lineTo(-2 * scale, 0 * scale)
+        ctx.lineTo(2 * scale, 13 * scale)
+        ctx.lineTo(5 * scale, 7 * scale)
+        ctx.lineTo(13 * scale, 7 * scale)
         ctx.stroke()
         ctx.restore()
 
-        // --- DRAW ROBOT HEAD ---
+        // --- 5. DRAW HEAD ---
         ctx.save()
         ctx.translate(x, y - 62 * scale * squish)
         ctx.scale(1, squish)
-        ctx.fillStyle = '#ffffff'
+        
+        // Head gradient
+        const headGrad = ctx.createRadialGradient(-8 * scale, -12 * scale, 3 * scale, 0, 0, 42 * scale)
+        headGrad.addColorStop(0, '#ffffff')
+        headGrad.addColorStop(0.65, '#f8fafc')
+        headGrad.addColorStop(1, '#94a3b8')
+        ctx.fillStyle = headGrad
         ctx.beginPath()
-        ctx.roundRect(-42 * scale, -28 * scale, 84 * scale, 56 * scale, 28 * scale)
+        ctx.ellipse(0, 0, 42 * scale, 32 * scale, 0, 0, Math.PI * 2)
         ctx.fill()
         ctx.strokeStyle = '#cbd5e1'
-        ctx.lineWidth = 1.5
+        ctx.lineWidth = 0.8
         ctx.stroke()
 
-        // Black Visor
-        ctx.fillStyle = '#0f172a'
+        // Head Glossy Highlight
+        const headHighlight = ctx.createLinearGradient(0, -28 * scale, 0, -6 * scale)
+        headHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.45)')
+        headHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)')
+        ctx.fillStyle = headHighlight
         ctx.beginPath()
-        ctx.roundRect(-34 * scale, -17 * scale, 68 * scale, 34 * scale, 17 * scale)
+        ctx.ellipse(0, -11 * scale, 32 * scale, 13 * scale, 0, 0, Math.PI * 2)
         ctx.fill()
 
-        // Visor glowing blue eyes
+        // Visor
+        const visorGrad = ctx.createLinearGradient(0, -16 * scale, 0, 16 * scale)
+        visorGrad.addColorStop(0, '#020617')
+        visorGrad.addColorStop(1, '#1e293b')
+        ctx.fillStyle = visorGrad
+        ctx.beginPath()
+        ctx.ellipse(0, 0, 32 * scale, 18 * scale, 0, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Visor Glossy Highlight
+        const visorHighlight = ctx.createLinearGradient(-20 * scale, -10 * scale, 20 * scale, 10 * scale)
+        visorHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.22)')
+        visorHighlight.addColorStop(0.3, 'rgba(255, 255, 255, 0.06)')
+        visorHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)')
+        ctx.fillStyle = visorHighlight
+        ctx.beginPath()
+        ctx.ellipse(-3 * scale, -3 * scale, 24 * scale, 11 * scale, -0.1, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Glowing blue wavelike LED eyes
         ctx.fillStyle = '#00f0ff'
         ctx.shadowBlur = 8 * scale
         ctx.shadowColor = '#00f0ff'
 
         if (state === 'confused') {
-          // Draw slanted confused eyes
+          // Slanted, confused winking LED lines
           ctx.beginPath()
-          ctx.arc(-14 * scale + eyeOffsetX, 0, 4.5 * scale, 0, Math.PI * 2)
-          ctx.arc(14 * scale + eyeOffsetX, -2 * scale, 4.5 * scale, 0, Math.PI * 2)
+          ctx.ellipse(-14 * scale + eyeOffsetX, 0, 6 * scale, 3.2 * scale, 0.05, 0, Math.PI * 2)
+          ctx.ellipse(14 * scale + eyeOffsetX, -2 * scale, 6 * scale, 3.2 * scale, -0.15, 0, Math.PI * 2)
           ctx.fill()
         } else if (state === 'hi') {
-          // Happy wink eyes
-          ctx.beginPath()
-          ctx.arc(-14 * scale, 0, 5 * scale, 0, Math.PI * 2)
-          ctx.fill()
-          // Arc wink eye
+          // Happy winking smile eyes
           ctx.strokeStyle = '#00f0ff'
-          ctx.lineWidth = 3.5
+          ctx.lineWidth = 3 * scale
+          ctx.lineCap = 'round'
+          // Left eye normal happy arc
           ctx.beginPath()
-          ctx.arc(14 * scale, 0, 6 * scale, Math.PI, 0)
+          ctx.arc(-14 * scale, -1 * scale, 5.5 * scale, 0, Math.PI)
+          ctx.stroke()
+          // Right eye wink arc
+          ctx.beginPath()
+          ctx.arc(14 * scale, 0, 5.5 * scale, Math.PI, 0)
           ctx.stroke()
         } else {
-          // Normal round eyes
+          // Normal round LED ovals
           ctx.beginPath()
-          ctx.arc(-14 * scale + eyeOffsetX, 0, 5 * scale, 0, Math.PI * 2)
-          ctx.arc(14 * scale + eyeOffsetX, 0, 5 * scale, 0, Math.PI * 2)
+          ctx.ellipse(-14 * scale + eyeOffsetX, 0, 6.2 * scale, 3.5 * scale, 0, 0, Math.PI * 2)
+          ctx.ellipse(14 * scale + eyeOffsetX, 0, 6.2 * scale, 3.5 * scale, 0, 0, Math.PI * 2)
           ctx.fill()
         }
         ctx.restore()

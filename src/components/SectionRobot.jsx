@@ -70,11 +70,12 @@ export default function SectionRobot({ action = 'coffee' }) {
 
     const width = (canvas.width = 150)
     const height = (canvas.height = 150)
-    const scale = 0.55 // Mascot size (small)
+    const scale = 0.58 // Slightly increased scale for visual pop
 
     let time = 0
     let steamParticles = []
     let codeParticles = []
+    let sparkParticles = []
 
     class SteamParticle {
       constructor(x, y) {
@@ -106,7 +107,7 @@ export default function SectionRobot({ action = 'coffee' }) {
         this.vy = -Math.random() * 0.8 - 0.5
         this.vx = (Math.random() - 0.5) * 0.4
         this.alpha = 0.8
-        this.size = Math.random() * 4 + 7
+        this.size = Math.random() * 3 + 6
       }
       update() {
         this.x += this.vx
@@ -120,361 +121,515 @@ export default function SectionRobot({ action = 'coffee' }) {
       }
     }
 
+    class SparkParticle {
+      constructor(x, y) {
+        this.x = x
+        this.y = y
+        this.vx = (Math.random() - 0.5) * 2.0
+        this.vy = (Math.random() - 0.5) * 2.0 - 0.8
+        this.alpha = 1.0
+        this.size = Math.random() * 2 + 1
+      }
+      update() {
+        this.x += this.vx
+        this.y += this.vy
+        this.alpha -= 0.035
+      }
+      draw(c) {
+        c.fillStyle = `rgba(251, 191, 36, ${this.alpha})` // Amber yellow sparks
+        c.beginPath()
+        c.arc(this.x, this.y, this.size, 0, Math.PI * 2)
+        c.fill()
+      }
+    }
+
     const animate = () => {
       ctx.clearRect(0, 0, width, height)
       time++
 
       const cx = width / 2
-      const cy = height / 2 + 15
+      const cy = height / 2 + 10
 
-      // Base robot setup
-      let squish = 1.0
-      let eyeOffsetX = 0
-      let state = 'normal'
+      // Hover / Floating Oscillation
+      const hoverOffset = Math.sin(time * 0.05) * 4.5
 
-      if (action === 'coffee') {
-        // Coffee Reclined Pose
+      // --- 1. DRAW FLOATING SHADOW ---
+      const shadowScale = 1 - hoverOffset / 25
+      ctx.save()
+      ctx.translate(cx, cy + 42 * scale)
+      ctx.fillStyle = `rgba(3, 1, 8, ${0.45 * shadowScale})`
+      ctx.beginPath()
+      ctx.ellipse(0, 0, 20 * scale * shadowScale, 5 * scale * shadowScale, 0, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.restore()
+
+      // --- Helper: Draw 3D Glossy EVE Robot Parts ---
+      const drawEVERobot = (customDrawBodyAndArms) => {
+        // Base coordinate translations
         ctx.save()
-        // Tilt body slightly
-        ctx.translate(cx, cy)
-        ctx.rotate(0.12)
-        
-        // Robot Head
+        ctx.translate(cx, cy + hoverOffset)
+
+        // Draw body & arms first (so head sits on top)
+        customDrawBodyAndArms()
+
+        // Draw Head (Egg shape)
         ctx.save()
         ctx.translate(0, -42 * scale)
-        ctx.fillStyle = '#ffffff'
+        
+        // Shiny 3D head gradient
+        const headGrad = ctx.createRadialGradient(-6 * scale, -8 * scale, 2 * scale, 0, 0, 26 * scale)
+        headGrad.addColorStop(0, '#ffffff')
+        headGrad.addColorStop(0.65, '#f8fafc')
+        headGrad.addColorStop(1, '#94a3b8') // Shaded dark metallic boundary
+        ctx.fillStyle = headGrad
         ctx.beginPath()
-        ctx.roundRect(-25 * scale, -18 * scale, 50 * scale, 36 * scale, 18 * scale)
+        ctx.ellipse(0, 0, 26 * scale, 20 * scale, 0, 0, Math.PI * 2)
         ctx.fill()
         ctx.strokeStyle = '#cbd5e1'
-        ctx.lineWidth = 1
+        ctx.lineWidth = 0.5
         ctx.stroke()
 
-        // Visor
-        ctx.fillStyle = '#0f172a'
+        // Glossy Highlight on Head
+        const headHighlight = ctx.createLinearGradient(0, -18 * scale, 0, -4 * scale)
+        headHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.45)')
+        headHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)')
+        ctx.fillStyle = headHighlight
         ctx.beginPath()
-        ctx.roundRect(-20 * scale, -11 * scale, 40 * scale, 22 * scale, 11 * scale)
+        ctx.ellipse(0, -7 * scale, 19 * scale, 8 * scale, 0, 0, Math.PI * 2)
         ctx.fill()
 
-        // Relaxed glowing blue eyes
+        // Visor (Glossy Dark Glass)
+        const visorGrad = ctx.createLinearGradient(0, -9 * scale, 0, 9 * scale)
+        visorGrad.addColorStop(0, '#020617') // deep black-blue
+        visorGrad.addColorStop(1, '#1e293b')
+        ctx.fillStyle = visorGrad
+        ctx.beginPath()
+        ctx.ellipse(0, 0, 20 * scale, 11 * scale, 0, 0, Math.PI * 2)
+        ctx.fill()
+        
+        // Inner screen glow line
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.1)'
+        ctx.lineWidth = 0.8
+        ctx.stroke()
+
+        // Glossy reflection stripe on glass visor
+        const visorHighlight = ctx.createLinearGradient(-12 * scale, -6 * scale, 12 * scale, 6 * scale)
+        visorHighlight.addColorStop(0, 'rgba(255,255,255,0.22)')
+        visorHighlight.addColorStop(0.3, 'rgba(255,255,255,0.06)')
+        visorHighlight.addColorStop(1, 'rgba(255,255,255,0)')
+        ctx.fillStyle = visorHighlight
+        ctx.beginPath()
+        ctx.ellipse(-2 * scale, -2 * scale, 15 * scale, 7 * scale, -0.1, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Glowing blue eyes (LED horizontal segmented arcs)
         ctx.fillStyle = '#00f0ff'
-        ctx.shadowBlur = 4
+        ctx.shadowBlur = 6 * scale
         ctx.shadowColor = '#00f0ff'
-        // Relaxed eyes (semicircles or curved lines)
-        ctx.strokeStyle = '#00f0ff'
-        ctx.lineWidth = 2 * scale
-        ctx.beginPath()
-        ctx.arc(-9 * scale, -2 * scale, 3 * scale, 0, Math.PI)
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.arc(9 * scale, -2 * scale, 3 * scale, 0, Math.PI)
-        ctx.stroke()
-        ctx.restore()
 
-        // Robot Body
-        ctx.fillStyle = '#ffffff'
-        ctx.beginPath()
-        ctx.roundRect(-22 * scale, -15 * scale, 44 * scale, 42 * scale, 15 * scale)
-        ctx.fill()
-        ctx.strokeStyle = '#cbd5e1'
-        ctx.lineWidth = 1
-        ctx.stroke()
+        const scanOffset = (action === 'reading') ? Math.sin(time * 0.08) * 3.5 * scale : 0
+        const isBlinking = (time % 160) < 8
 
-        // Relaxed left arm
-        ctx.save()
-        ctx.translate(-26 * scale, -2 * scale)
-        ctx.fillStyle = '#ffffff'
-        ctx.beginPath()
-        ctx.roundRect(-5 * scale, -8 * scale, 10 * scale, 25 * scale, 5 * scale)
-        ctx.fill()
-        ctx.strokeStyle = '#cbd5e1'
-        ctx.stroke()
-        ctx.restore()
-
-        // Right arm holding coffee cup (raised dynamically)
-        ctx.save()
-        const drinkCycle = (time * 0.02) % (Math.PI * 2)
-        const isDrinking = drinkCycle > Math.PI
-        const armAngle = isDrinking 
-          ? -0.8 - Math.sin(drinkCycle) * 0.4 // raise to mouth
-          : -0.4 // rest on body
-        
-        ctx.translate(26 * scale, -2 * scale)
-        ctx.rotate(armAngle)
-        
-        // Draw arm segment
-        ctx.fillStyle = '#ffffff'
-        ctx.beginPath()
-        ctx.roundRect(-5 * scale, -8 * scale, 10 * scale, 25 * scale, 5 * scale)
-        ctx.fill()
-        ctx.strokeStyle = '#cbd5e1'
-        ctx.stroke()
-
-        // Coffee Mug (attached to arm tip)
-        ctx.translate(0, 18 * scale)
-        ctx.rotate(-armAngle - 0.1) // Mug remains upright
-        ctx.fillStyle = '#ff007f' // Neon Pink Mug
-        ctx.beginPath()
-        ctx.roundRect(-4 * scale, -6 * scale, 10 * scale, 12 * scale, 2 * scale)
-        ctx.fill()
-        // Handle
-        ctx.strokeStyle = '#ff007f'
-        ctx.lineWidth = 1.5
-        ctx.beginPath()
-        ctx.arc(6 * scale, 0, 3 * scale, -Math.PI / 2, Math.PI / 2)
-        ctx.stroke()
-
-        // Steam particle emitter tip
-        const steamX = cx + (26 * scale + Math.cos(armAngle) * 10) * Math.cos(0.12) - (18 * scale + Math.sin(armAngle) * 10) * Math.sin(0.12)
-        const steamY = cy + (26 * scale + Math.cos(armAngle) * 10) * Math.sin(0.12) + (18 * scale + Math.sin(armAngle) * 10) * Math.cos(0.12) - 15
-        
-        if (Math.random() < 0.08) {
-          steamParticles.push(new SteamParticle(steamX + 5, steamY))
+        if (isBlinking) {
+          // Blink state: Flat thin LED line
+          ctx.fillRect(-14 * scale + scanOffset, -0.5 * scale, 7 * scale, 1.2 * scale)
+          ctx.fillRect(7 * scale + scanOffset, -0.5 * scale, 7 * scale, 1.2 * scale)
+        } else if (action === 'coffee') {
+          // Relaxed/Happy curves
+          ctx.strokeStyle = '#00f0ff'
+          ctx.lineWidth = 2 * scale
+          ctx.lineCap = 'round'
+          ctx.beginPath()
+          ctx.arc(-10 * scale, -1 * scale, 3.5 * scale, 0, Math.PI)
+          ctx.stroke()
+          ctx.beginPath()
+          ctx.arc(10 * scale, -1 * scale, 3.5 * scale, 0, Math.PI)
+          ctx.stroke()
+        } else if (action === 'wave') {
+          // Left eye winks (arc), Right eye round winking smile
+          ctx.strokeStyle = '#00f0ff'
+          ctx.lineWidth = 2 * scale
+          ctx.lineCap = 'round'
+          // wink arc
+          ctx.beginPath()
+          ctx.arc(-10 * scale, 0, 3.5 * scale, Math.PI, 0)
+          ctx.stroke()
+          // happy arc
+          ctx.beginPath()
+          ctx.arc(10 * scale, -1 * scale, 3.5 * scale, 0, Math.PI)
+          ctx.stroke()
+        } else {
+          // Standard focused capsule eyes
+          ctx.beginPath()
+          ctx.ellipse(-10 * scale + scanOffset, 0, 3.8 * scale, 2.0 * scale, 0, 0, Math.PI * 2)
+          ctx.ellipse(10 * scale + scanOffset, 0, 3.8 * scale, 2.0 * scale, 0, 0, Math.PI * 2)
+          ctx.fill()
         }
-        ctx.restore()
 
-        // Base / Treads (reclined)
-        ctx.save()
-        ctx.translate(0, 28 * scale)
-        ctx.fillStyle = '#334155'
+        ctx.restore() // Head restore
+        ctx.restore() // Base restore
+      }
+
+      // Draw EVE body capsule gradient helper
+      const drawEVEBody = (taperScaleX = 1.0) => {
+        const bodyGrad = ctx.createRadialGradient(-4 * scale, -6 * scale, 2 * scale, 0, 6 * scale, 25 * scale)
+        bodyGrad.addColorStop(0, '#ffffff')
+        bodyGrad.addColorStop(0.7, '#f8fafc')
+        bodyGrad.addColorStop(1, '#94a3b8')
+        ctx.fillStyle = bodyGrad
         ctx.beginPath()
-        ctx.roundRect(-16 * scale, -4 * scale, 32 * scale, 8 * scale, 4 * scale)
+        ctx.ellipse(0, 8 * scale, 22 * scale * taperScaleX, 26 * scale, 0, 0, Math.PI * 2)
         ctx.fill()
+        ctx.strokeStyle = '#cbd5e1'
+        ctx.lineWidth = 0.5
+        ctx.stroke()
+
+        // Highlight layer on body
+        const bodyHighlight = ctx.createLinearGradient(0, -10 * scale, 0, 15 * scale)
+        bodyHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.4)')
+        bodyHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)')
+        ctx.fillStyle = bodyHighlight
+        ctx.beginPath()
+        ctx.ellipse(0, 2 * scale, 15 * scale * taperScaleX, 10 * scale, 0, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      // Left Floating Arm helper
+      const drawLeftArm = (armAngle, tx = -28 * scale, ty = 6 * scale) => {
+        ctx.save()
+        ctx.translate(tx, ty)
+        ctx.rotate(armAngle)
+        const armGrad = ctx.createLinearGradient(-4 * scale, -10 * scale, 4 * scale, 12 * scale)
+        armGrad.addColorStop(0, '#ffffff')
+        armGrad.addColorStop(1, '#94a3b8')
+        ctx.fillStyle = armGrad
+        ctx.beginPath()
+        ctx.ellipse(0, 0, 5.5 * scale, 15 * scale, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.strokeStyle = '#cbd5e1'
+        ctx.lineWidth = 0.5
+        ctx.stroke()
         ctx.restore()
+      }
 
-        ctx.restore() // restore main rotation
+      // Right Floating Arm helper
+      const drawRightArm = (armAngle, tx = 28 * scale, ty = 6 * scale) => {
+        ctx.save()
+        ctx.translate(tx, ty)
+        ctx.rotate(armAngle)
+        const armGrad = ctx.createLinearGradient(-4 * scale, -10 * scale, 4 * scale, 12 * scale)
+        armGrad.addColorStop(0, '#ffffff')
+        armGrad.addColorStop(1, '#94a3b8')
+        ctx.fillStyle = armGrad
+        ctx.beginPath()
+        ctx.ellipse(0, 0, 5.5 * scale, 15 * scale, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.strokeStyle = '#cbd5e1'
+        ctx.lineWidth = 0.5
+        ctx.stroke()
+        ctx.restore()
+      }
 
-        // Update & draw steam particles
+      // Render poses dynamically
+      if (action === 'coffee') {
+        // --- COFFEE DRINKING POSE ---
+        drawEVERobot(() => {
+          // Gentle body rotation
+          ctx.rotate(0.08)
+
+          // Relaxed left arm
+          drawLeftArm(0.2)
+
+          // Body
+          drawEVEBody()
+
+          // Right arm holding mug raised/drinking
+          const drinkCycle = (time * 0.02) % (Math.PI * 2)
+          const isDrinking = drinkCycle > Math.PI
+          const armAngle = isDrinking 
+            ? -0.95 - Math.sin(drinkCycle) * 0.35 // raise to visor
+            : -0.3 // rest on side
+          
+          drawRightArm(armAngle)
+
+          // Draw neon pink mug attached to right arm tip
+          ctx.save()
+          ctx.translate(28 * scale, 6 * scale)
+          ctx.rotate(armAngle)
+          ctx.translate(0, 12 * scale)
+          ctx.rotate(-armAngle - 0.08) // Mug stays vertical-ish
+          
+          ctx.fillStyle = '#ff007f' // Neon Pink
+          ctx.beginPath()
+          ctx.roundRect(-4 * scale, -6 * scale, 9 * scale, 11 * scale, 1.5 * scale)
+          ctx.fill()
+          // Handle
+          ctx.strokeStyle = '#ff007f'
+          ctx.lineWidth = 1.2
+          ctx.beginPath()
+          ctx.arc(5 * scale, 0, 2.5 * scale, -Math.PI / 2, Math.PI / 2)
+          ctx.stroke()
+
+          // Emit steam from top of mug
+          const steamWorldX = cx + (28 * scale + Math.cos(armAngle) * 8) * Math.cos(0.08) - (12 * scale + Math.sin(armAngle) * 8) * Math.sin(0.08)
+          const steamWorldY = cy + hoverOffset + (28 * scale + Math.cos(armAngle) * 8) * Math.sin(0.08) + (12 * scale + Math.sin(armAngle) * 8) * Math.cos(0.08) - 10
+          if (Math.random() < 0.08) {
+            steamParticles.push(new SteamParticle(steamWorldX, steamWorldY))
+          }
+          ctx.restore()
+        })
+
+        // Draw steam particles
         steamParticles.forEach((p, idx) => {
           p.update()
           p.draw(ctx)
           if (p.alpha <= 0) steamParticles.splice(idx, 1)
         })
 
-      } else if (action === 'working') {
-        // Typing/Coding Pose
-        
-        // Desk & Screen
-        ctx.fillStyle = 'rgba(0, 240, 255, 0.05)'
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.3)'
-        ctx.lineWidth = 1
-        ctx.beginPath()
-        ctx.roundRect(cx - 42, cy - 10, 24, 30, 3)
-        ctx.fill()
-        ctx.stroke()
-
-        // Holographic lines on screen
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.6)'
-        ctx.lineWidth = 1
-        for (let i = cy - 6; i < cy + 15; i += 5) {
+      } else if (action === 'reading') {
+        // --- READING SCANNING POSE ---
+        drawEVERobot(() => {
+          // Floating hologram document below EVE
+          ctx.save()
+          // Draw hologram box
+          const holoGrad = ctx.createLinearGradient(-20 * scale, 24 * scale, 20 * scale, 42 * scale)
+          holoGrad.addColorStop(0, 'rgba(0, 240, 255, 0.09)')
+          holoGrad.addColorStop(1, 'rgba(0, 240, 255, 0.02)')
+          ctx.fillStyle = holoGrad
+          ctx.strokeStyle = 'rgba(0, 240, 255, 0.35)'
+          ctx.lineWidth = 1.0
           ctx.beginPath()
-          ctx.moveTo(cx - 38, i)
-          ctx.lineTo(cx - 22, i)
+          ctx.roundRect(-20 * scale, 22 * scale, 40 * scale, 20 * scale, 2.5 * scale)
+          ctx.fill()
           ctx.stroke()
-        }
 
-        // Emit code symbols
-        if (Math.random() < 0.25) {
-          codeParticles.push(new CodeParticle(cx - 30, cy - 12))
-        }
+          // Sweeping pink neon laser
+          const laserY = 22 * scale + (Math.sin(time * 0.06) * 0.5 + 0.5) * 20 * scale
+          ctx.strokeStyle = 'rgba(255, 0, 127, 0.75)'
+          ctx.lineWidth = 1.0
+          ctx.beginPath()
+          ctx.moveTo(-21 * scale, laserY)
+          ctx.lineTo(21 * scale, laserY)
+          ctx.stroke()
 
-        // Robot Head (looking forward-down)
-        ctx.save()
-        ctx.translate(cx + 15, cy - 42 * scale)
-        ctx.fillStyle = '#ffffff'
-        ctx.beginPath()
-        ctx.roundRect(-25 * scale, -18 * scale, 50 * scale, 36 * scale, 18 * scale)
-        ctx.fill()
-        ctx.strokeStyle = '#cbd5e1'
-        ctx.lineWidth = 1
-        ctx.stroke()
+          // Data lines
+          ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)'
+          ctx.lineWidth = 0.6
+          for (let i = 25 * scale; i < 40 * scale; i += 3.5 * scale) {
+            if (Math.abs(i - laserY) > 2) {
+              ctx.beginPath()
+              ctx.moveTo(-16 * scale, i)
+              ctx.lineTo(16 * scale, i)
+              ctx.stroke()
+            }
+          }
+          ctx.restore()
 
-        // Visor
-        ctx.fillStyle = '#0f172a'
-        ctx.beginPath()
-        ctx.roundRect(-20 * scale, -11 * scale, 40 * scale, 22 * scale, 11 * scale)
-        ctx.fill()
+          // Arms angled inward holding the hologram
+          drawLeftArm(0.35)
+          drawRightArm(-0.35)
 
-        // Focus eyes (looking left/screen direction)
-        ctx.fillStyle = '#00f0ff'
-        ctx.beginPath()
-        ctx.arc(-13 * scale, 0, 3 * scale, 0, Math.PI * 2)
-        ctx.arc(5 * scale, 0, 3 * scale, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.restore()
+          // Body
+          drawEVEBody()
 
-        // Robot Body
-        ctx.fillStyle = '#ffffff'
-        ctx.beginPath()
-        ctx.roundRect(cx + 15 - 22 * scale, cy - 15 * scale, 44 * scale, 42 * scale, 15 * scale)
-        ctx.fill()
-        ctx.strokeStyle = '#cbd5e1'
-        ctx.lineWidth = 1
-        ctx.stroke()
+          // Emit binary/telemetry particles rising up
+          if (Math.random() < 0.12) {
+            codeParticles.push(new CodeParticle(cx + (Math.random() - 0.5) * 34 * scale, cy + hoverOffset + 18 * scale))
+          }
+        })
 
-        // Left arm typing on desk (moving fast)
-        ctx.save()
-        ctx.translate(cx + 15 - 26 * scale, cy - 2 * scale)
-        const leftArmAngle = Math.sin(time * 0.6) * 0.3 - 0.5
-        ctx.rotate(leftArmAngle)
-        ctx.fillStyle = '#ffffff'
-        ctx.beginPath()
-        ctx.roundRect(-5 * scale, -8 * scale, 10 * scale, 25 * scale, 5 * scale)
-        ctx.fill()
-        ctx.strokeStyle = '#cbd5e1'
-        ctx.stroke()
-        ctx.restore()
-
-        // Right arm typing (moving fast)
-        ctx.save()
-        ctx.translate(cx + 15 + 26 * scale, cy - 2 * scale)
-        const rightArmAngle = -Math.sin(time * 0.7) * 0.3 - 0.7
-        ctx.rotate(rightArmAngle)
-        ctx.fillStyle = '#ffffff'
-        ctx.beginPath()
-        ctx.roundRect(-5 * scale, -8 * scale, 10 * scale, 25 * scale, 5 * scale)
-        ctx.fill()
-        ctx.strokeStyle = '#cbd5e1'
-        ctx.stroke()
-        ctx.restore()
-
-        // Base / Treads
-        ctx.save()
-        ctx.translate(cx + 15, cy + 28 * scale)
-        ctx.fillStyle = '#334155'
-        ctx.beginPath()
-        ctx.roundRect(-16 * scale, -4 * scale, 32 * scale, 8 * scale, 4 * scale)
-        ctx.fill()
-        ctx.restore()
-
-        // Update and draw code particles
         codeParticles.forEach((p, idx) => {
           p.update()
           p.draw(ctx)
           if (p.alpha <= 0) codeParticles.splice(idx, 1)
         })
-      } else if (action === 'reading') {
-        // Reading/Scanning holographic document pose
-        
-        // Robot Head (looking slightly down)
-        ctx.save()
-        ctx.translate(cx, cy - 42 * scale)
-        ctx.fillStyle = '#ffffff'
+
+      } else if (action === 'working') {
+        // --- WORKING / CODING POSE ---
+        // Desk screen (left side)
+        ctx.fillStyle = 'rgba(0, 240, 255, 0.04)'
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)'
+        ctx.lineWidth = 1.0
         ctx.beginPath()
-        ctx.roundRect(-25 * scale, -18 * scale, 50 * scale, 36 * scale, 18 * scale)
+        ctx.roundRect(cx - 42, cy - 8, 20, 26, 2.5)
         ctx.fill()
-        ctx.strokeStyle = '#cbd5e1'
-        ctx.lineWidth = 1
         ctx.stroke()
 
-        // Visor
-        ctx.fillStyle = '#0f172a'
-        ctx.beginPath()
-        ctx.roundRect(-20 * scale, -11 * scale, 40 * scale, 22 * scale, 11 * scale)
-        ctx.fill()
-
-        // Scanning glowing blue eyes (horizontal tracking)
-        const scanOffset = Math.sin(time * 0.08) * 3 * scale
-        ctx.fillStyle = '#00f0ff'
-        ctx.shadowBlur = 4
-        ctx.shadowColor = '#00f0ff'
-        ctx.beginPath()
-        ctx.arc(-9 * scale + scanOffset, 0, 3 * scale, 0, Math.PI * 2)
-        ctx.arc(9 * scale + scanOffset, 0, 3 * scale, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.restore()
-
-        // Robot Body
-        ctx.fillStyle = '#ffffff'
-        ctx.beginPath()
-        ctx.roundRect(cx - 22 * scale, cy - 15 * scale, 44 * scale, 42 * scale, 15 * scale)
-        ctx.fill()
-        ctx.strokeStyle = '#cbd5e1'
-        ctx.lineWidth = 1
-        ctx.stroke()
-
-        // Left arm angled inward supporting the hologram
-        ctx.save()
-        ctx.translate(cx - 26 * scale, cy - 2 * scale)
-        ctx.rotate(0.35)
-        ctx.fillStyle = '#ffffff'
-        ctx.beginPath()
-        ctx.roundRect(-5 * scale, -8 * scale, 10 * scale, 25 * scale, 5 * scale)
-        ctx.fill()
-        ctx.strokeStyle = '#cbd5e1'
-        ctx.stroke()
-        ctx.restore()
-
-        // Right arm angled inward supporting the hologram
-        ctx.save()
-        ctx.translate(cx + 26 * scale, cy - 2 * scale)
-        ctx.rotate(-0.35)
-        ctx.fillStyle = '#ffffff'
-        ctx.beginPath()
-        ctx.roundRect(-5 * scale, -8 * scale, 10 * scale, 25 * scale, 5 * scale)
-        ctx.fill()
-        ctx.strokeStyle = '#cbd5e1'
-        ctx.stroke()
-        ctx.restore()
-
-        // Base / Treads
-        ctx.save()
-        ctx.translate(cx, cy + 28 * scale)
-        ctx.fillStyle = '#334155'
-        ctx.beginPath()
-        ctx.roundRect(-16 * scale, -4 * scale, 32 * scale, 8 * scale, 4 * scale)
-        ctx.fill()
-        ctx.restore()
-
-        // Holographic document
-        const holoX = cx - 22 * scale
-        const holoY = cy - 2 * scale
-        const holoW = 44 * scale
-        const holoH = 26 * scale
-
-        // Hologram container gradient glow
-        const holoGrad = ctx.createLinearGradient(holoX, holoY, holoX, holoY + holoH)
-        holoGrad.addColorStop(0, 'rgba(0, 240, 255, 0.08)')
-        holoGrad.addColorStop(1, 'rgba(0, 240, 255, 0.02)')
-        ctx.fillStyle = holoGrad
+        // screen lines
         ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)'
-        ctx.lineWidth = 1
-        ctx.beginPath()
-        ctx.roundRect(holoX, holoY, holoW, holoH, 3 * scale)
-        ctx.fill()
-        ctx.stroke()
-
-        // Scanning laser (pink neon line sweeping up/down)
-        const laserY = holoY + (Math.sin(time * 0.05) * 0.5 + 0.5) * holoH
-        ctx.strokeStyle = 'rgba(255, 0, 127, 0.7)'
-        ctx.lineWidth = 1.2
-        ctx.beginPath()
-        ctx.moveTo(holoX - 2 * scale, laserY)
-        ctx.lineTo(holoX + holoW + 2 * scale, laserY)
-        ctx.stroke()
-
-        // Telemetry text / data lines in hologram
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.5)'
         ctx.lineWidth = 0.8
-        for (let i = holoY + 4 * scale; i < holoY + holoH - 2 * scale; i += 4 * scale) {
-          if (Math.abs(i - laserY) > 2) {
-            ctx.beginPath()
-            ctx.moveTo(holoX + 4 * scale, i)
-            ctx.lineTo(holoX + holoW - 4 * scale, i)
-            ctx.stroke()
-          }
+        for (let i = cy - 4; i < cy + 15; i += 4) {
+          ctx.beginPath()
+          ctx.moveTo(cx - 38, i)
+          ctx.lineTo(cx - 26, i)
+          ctx.stroke()
         }
 
-        // Emit code / binary particles floating upward
-        if (Math.random() < 0.15) {
-          codeParticles.push(new CodeParticle(cx + (Math.random() - 0.5) * 36 * scale, holoY + 2 * scale))
+        if (Math.random() < 0.22) {
+          codeParticles.push(new CodeParticle(cx - 30, cy - 8))
         }
 
-        // Update and draw code particles
+        drawEVERobot(() => {
+          // Body (leaning forward slightly)
+          ctx.translate(10 * scale, 0)
+          
+          // Fast-typing arms
+          const leftArmAngle = Math.sin(time * 0.65) * 0.25 - 0.5
+          const rightArmAngle = -Math.sin(time * 0.75) * 0.25 - 0.65
+          drawLeftArm(leftArmAngle, -28 * scale, 6 * scale)
+          drawRightArm(rightArmAngle, 28 * scale, 6 * scale)
+
+          drawEVEBody()
+        })
+
         codeParticles.forEach((p, idx) => {
           p.update()
           p.draw(ctx)
           if (p.alpha <= 0) codeParticles.splice(idx, 1)
+        })
+
+      } else if (action === 'building') {
+        // --- BUILDING / WRENCH POSE ---
+        drawEVERobot(() => {
+          // Rotating holographic gear in front
+          ctx.save()
+          ctx.translate(-24 * scale, 20 * scale)
+          ctx.rotate(time * 0.035)
+          ctx.strokeStyle = 'rgba(251, 191, 36, 0.55)'
+          ctx.lineWidth = 1.2
+          ctx.beginPath()
+          ctx.arc(0, 0, 7.5 * scale, 0, Math.PI * 2)
+          ctx.stroke()
+          // draw teeth
+          for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+            ctx.save()
+            ctx.rotate(a)
+            ctx.strokeRect(-1.5 * scale, -10 * scale, 3 * scale, 4 * scale)
+            ctx.restore()
+          }
+          ctx.restore()
+
+          // Left Arm holding wrench
+          drawLeftArm(0.55 + Math.sin(time * 0.12) * 0.15)
+          
+          // Draw wrench in left arm
+          ctx.save()
+          ctx.translate(-28 * scale, 6 * scale)
+          ctx.rotate(0.55 + Math.sin(time * 0.12) * 0.15)
+          ctx.translate(0, 10 * scale)
+          ctx.fillStyle = '#94a3b8'
+          ctx.fillRect(-1.5 * scale, 0, 3 * scale, 12 * scale)
+          ctx.beginPath()
+          ctx.arc(0, 12 * scale, 3.5 * scale, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.fillStyle = '#0f172a'
+          ctx.beginPath()
+          ctx.arc(0, 12 * scale, 1.5 * scale, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.restore()
+
+          // Right Arm idle
+          drawRightArm(-0.2)
+
+          // Body
+          drawEVEBody()
+
+          // Spark particles emitter
+          if (Math.random() < 0.20) {
+            sparkParticles.push(new SparkParticle(cx - 24 * scale, cy + hoverOffset + 20 * scale))
+          }
+        })
+
+        sparkParticles.forEach((p, idx) => {
+          p.update()
+          p.draw(ctx)
+          if (p.alpha <= 0) sparkParticles.splice(idx, 1)
+        })
+
+      } else if (action === 'leading') {
+        // --- LEADING / HARDHAT POSE ---
+        drawEVERobot(() => {
+          // Arms
+          // Left arm holds tablet clipboard
+          drawLeftArm(0.2)
+          
+          // Right arm gesture
+          drawRightArm(-0.4 + Math.sin(time * 0.06) * 0.1)
+
+          // Body
+          drawEVEBody()
+
+          // Drawing futuristic tablet clipboard in front/left
+          ctx.save()
+          ctx.translate(-20 * scale, 18 * scale)
+          ctx.rotate(-0.1)
+          ctx.fillStyle = 'rgba(0, 240, 255, 0.16)'
+          ctx.strokeStyle = 'rgba(0, 240, 255, 0.55)'
+          ctx.lineWidth = 1.0
+          ctx.beginPath()
+          ctx.roundRect(-8 * scale, -11 * scale, 16 * scale, 22 * scale, 2 * scale)
+          ctx.fill()
+          ctx.stroke()
+          // clip detail
+          ctx.fillStyle = '#00f0ff'
+          ctx.fillRect(-3 * scale, -11 * scale, 6 * scale, 2 * scale)
+          // tech screen lines
+          ctx.strokeStyle = 'rgba(0, 240, 255, 0.75)'
+          ctx.lineWidth = 0.8
+          ctx.beginPath()
+          ctx.moveTo(-5 * scale, -5 * scale); ctx.lineTo(5 * scale, -5 * scale)
+          ctx.moveTo(-5 * scale, -1 * scale); ctx.lineTo(2 * scale, -1 * scale)
+          ctx.moveTo(-5 * scale, 3 * scale); ctx.lineTo(5 * scale, 3 * scale)
+          ctx.stroke()
+          ctx.restore()
+
+          // Overlay small safety hat on the head!
+          ctx.save()
+          ctx.translate(0, -42 * scale) // Translate to head position
+          ctx.fillStyle = '#f59e0b' // Safety Amber Yellow
+          // Hat crown
+          ctx.beginPath()
+          ctx.arc(0, -17 * scale, 12 * scale, Math.PI, 0)
+          ctx.fill()
+          // Hat brim
+          ctx.fillRect(-17 * scale, -17 * scale, 34 * scale, 2 * scale)
+          // Ridge stripe on helmet
+          ctx.fillStyle = '#d97706'
+          ctx.fillRect(-2 * scale, -27 * scale, 4 * scale, 10 * scale)
+          ctx.restore()
+        })
+
+      } else if (action === 'wave') {
+        // --- FRIENDLY WAVING POSE ---
+        drawEVERobot(() => {
+          // Left arm holding envelope
+          drawLeftArm(0.1)
+
+          // Body
+          drawEVEBody()
+
+          // Waving right arm
+          const waveAngle = -1.3 + Math.sin(time * 0.14) * 0.45
+          drawRightArm(waveAngle, 28 * scale, 6 * scale)
+
+          // Envelope in Left Hand
+          ctx.save()
+          ctx.translate(-28 * scale, 16 * scale)
+          ctx.rotate(0.08)
+          ctx.fillStyle = 'rgba(255, 0, 127, 0.22)'
+          ctx.strokeStyle = 'rgba(255, 0, 127, 0.65)'
+          ctx.lineWidth = 1.0
+          ctx.beginPath()
+          ctx.roundRect(-9 * scale, -6 * scale, 18 * scale, 12 * scale, 1.5 * scale)
+          ctx.fill()
+          ctx.stroke()
+          // Envelope flap lines
+          ctx.beginPath()
+          ctx.moveTo(-9 * scale, -6 * scale)
+          ctx.lineTo(0, 0)
+          ctx.lineTo(9 * scale, -6 * scale)
+          ctx.stroke()
+          ctx.restore()
         })
       }
 
@@ -494,7 +649,9 @@ export default function SectionRobot({ action = 'coffee' }) {
         verticalAlign: 'middle',
         transition: 'opacity 0.6s var(--transition), transform 0.6s var(--transition)',
         opacity: isVisible ? 1 : 0,
-        transform: isVisible ? 'scale(1) translateY(0)' : 'scale(0.8) translateY(20px)',
+        transform: isVisible 
+          ? 'scale(1) translateY(0) rotate(0deg)' 
+          : 'scale(0.5) translateY(45px) rotate(-12deg)',
         pointerEvents: isVisible ? 'auto' : 'none',
         width: '150px',
         height: '150px',
