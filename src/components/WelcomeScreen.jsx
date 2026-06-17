@@ -33,6 +33,18 @@ export default function WelcomeScreen({ onEnter }) {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
+    const roundedRect = (c, x, y, w, h, r) => {
+      const radius = Math.max(0, Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2))
+      c.moveTo(x + radius, y)
+      c.lineTo(x + w - radius, y)
+      c.quadraticCurveTo(x + w, y, x + w, y + radius)
+      c.lineTo(x + w, y + h - radius)
+      c.quadraticCurveTo(x + w, y + h, x + w - radius, y + h)
+      c.lineTo(x + radius, y + h)
+      c.quadraticCurveTo(x, y + h, x, y + h - radius)
+      c.lineTo(x, y + radius)
+      c.quadraticCurveTo(x, y, x + radius, y)
+    }
     
     let width = (canvas.width = window.innerWidth)
     let height = (canvas.height = window.innerHeight)
@@ -157,7 +169,7 @@ export default function WelcomeScreen({ onEnter }) {
           ctx.strokeStyle = '#ffffff'
           ctx.lineWidth = 1.5
           ctx.beginPath()
-          ctx.roundRect(-45 * scale, -22 * scale, 90 * scale, 38 * scale, 8 * scale)
+          roundedRect(ctx, -45 * scale, -22 * scale, 90 * scale, 38 * scale, 8 * scale)
           ctx.fill()
           ctx.stroke()
           
@@ -282,7 +294,7 @@ export default function WelcomeScreen({ onEnter }) {
         // Chest Screen (Indicator)
         ctx.fillStyle = '#1e1b4b'
         ctx.beginPath()
-        ctx.roundRect(-18 * scale, -4 * scale, 36 * scale, 22 * scale, 5 * scale)
+        roundedRect(ctx, -18 * scale, -4 * scale, 36 * scale, 22 * scale, 5 * scale)
         ctx.fill()
         
         // Heartbeat wave pulse

@@ -67,6 +67,18 @@ export default function SectionRobot({ action = 'coffee' }) {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
+    const roundedRect = (c, x, y, w, h, r) => {
+      const radius = Math.max(0, Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2))
+      c.moveTo(x + radius, y)
+      c.lineTo(x + w - radius, y)
+      c.quadraticCurveTo(x + w, y, x + w, y + radius)
+      c.lineTo(x + w, y + h - radius)
+      c.quadraticCurveTo(x + w, y + h, x + w - radius, y + h)
+      c.lineTo(x + radius, y + h)
+      c.quadraticCurveTo(x, y + h, x, y + h - radius)
+      c.lineTo(x, y + radius)
+      c.quadraticCurveTo(x, y, x + radius, y)
+    }
 
     const width = (canvas.width = 150)
     const height = (canvas.height = 150)
@@ -361,7 +373,7 @@ export default function SectionRobot({ action = 'coffee' }) {
           
           ctx.fillStyle = '#ff007f' // Neon Pink
           ctx.beginPath()
-          ctx.roundRect(-4 * scale, -6 * scale, 9 * scale, 11 * scale, 1.5 * scale)
+          roundedRect(ctx, -4 * scale, -6 * scale, 9 * scale, 11 * scale, 1.5 * scale)
           ctx.fill()
           // Handle
           ctx.strokeStyle = '#ff007f'
@@ -399,7 +411,7 @@ export default function SectionRobot({ action = 'coffee' }) {
           ctx.strokeStyle = 'rgba(0, 240, 255, 0.35)'
           ctx.lineWidth = 1.0
           ctx.beginPath()
-          ctx.roundRect(-20 * scale, 22 * scale, 40 * scale, 20 * scale, 2.5 * scale)
+          roundedRect(ctx, -20 * scale, 22 * scale, 40 * scale, 20 * scale, 2.5 * scale)
           ctx.fill()
           ctx.stroke()
 
@@ -451,7 +463,7 @@ export default function SectionRobot({ action = 'coffee' }) {
         ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)'
         ctx.lineWidth = 1.0
         ctx.beginPath()
-        ctx.roundRect(cx - 42, cy - 8, 20, 26, 2.5)
+        roundedRect(ctx, cx - 42, cy - 8, 20, 26, 2.5)
         ctx.fill()
         ctx.stroke()
 
@@ -567,7 +579,7 @@ export default function SectionRobot({ action = 'coffee' }) {
           ctx.strokeStyle = 'rgba(0, 240, 255, 0.55)'
           ctx.lineWidth = 1.0
           ctx.beginPath()
-          ctx.roundRect(-8 * scale, -11 * scale, 16 * scale, 22 * scale, 2 * scale)
+          roundedRect(ctx, -8 * scale, -11 * scale, 16 * scale, 22 * scale, 2 * scale)
           ctx.fill()
           ctx.stroke()
           // clip detail
@@ -620,7 +632,7 @@ export default function SectionRobot({ action = 'coffee' }) {
           ctx.strokeStyle = 'rgba(255, 0, 127, 0.65)'
           ctx.lineWidth = 1.0
           ctx.beginPath()
-          ctx.roundRect(-9 * scale, -6 * scale, 18 * scale, 12 * scale, 1.5 * scale)
+          roundedRect(ctx, -9 * scale, -6 * scale, 18 * scale, 12 * scale, 1.5 * scale)
           ctx.fill()
           ctx.stroke()
           // Envelope flap lines
