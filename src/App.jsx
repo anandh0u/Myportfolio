@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import FlowingBackground from './components/FlowingBackground'
 import WelcomeScreen from './components/WelcomeScreen'
+import SectionRobot from './components/SectionRobot'
 import './App.css'
 
 export default function App() {
@@ -8,6 +9,8 @@ export default function App() {
   const [activeNav, setActiveNav] = useState('home')
   const [activeCategory, setActiveCategory] = useState('all')
   const [scrollWidth, setScrollWidth] = useState(0)
+  const [activePaperId, setActivePaperId] = useState(null)
+  const [copiedPaperId, setCopiedPaperId] = useState(null)
 
   // Interactive Terminal State
   const [consoleHistory, setConsoleHistory] = useState([
@@ -37,14 +40,31 @@ export default function App() {
     setActiveNav(id)
   }
 
+  const copyCitation = (id, text) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedPaperId(id)
+      setTimeout(() => {
+        setCopiedPaperId(null)
+      }, 2000)
+    })
+  }
+
   // Predefined terminal command responses
   const COMMAND_RESPONSES = {
     help: [
       { text: 'Available system query logs:', type: 'success' },
       { text: '  about      - Display biographic profile narrative', type: 'system' },
+      { text: '  research   - Query academic publications and preprints', type: 'system' },
       { text: '  skills     - List active technical domains and expertise', type: 'system' },
       { text: '  status     - Show current academic enrollment metrics', type: 'system' },
       { text: '  clear      - Clear terminal screen log', type: 'system' }
+    ],
+    research: [
+      { text: 'Academic Publications & Preprints:', type: 'success' },
+      { text: '  1. Non-Anthropomorphic Bipedal Robotic System (NCREEE \'19)', type: 'system' },
+      { text: '  2. Speed & Direction Control of DC Motor via Wireless (NCREEE \'19)', type: 'system' },
+      { text: '  3. Intelligent Threat Classification in Cyber-Physical Nodes (Preprint \'26)', type: 'system' },
+      { text: '  Type "query_sys --target <id>" or explore the Research section below.', type: 'info' }
     ],
     about: [
       { text: 'Profile Narrative:', type: 'success' },
@@ -63,8 +83,8 @@ export default function App() {
       { text: 'Current Status Parameters:', type: 'success' },
       { text: '  Affiliation  : Government Engineering College, Thrissur', type: 'system' },
       { text: '  Program      : Bachelor of Technology in Cyber Physical Systems (2024 - 2028)', type: 'system' },
-      { text: '  Internship   : Cybersecurity Intern at Cybernix YLLP', type: 'system' },
-      { text: '  Uptime       : Active developmental state', type: 'system' }
+      { text: '  Role         : Project Lead at Vtron', type: 'system' },
+      { text: '  Uptime       : Active engineering management state', type: 'system' }
     ]
   }
 
@@ -114,6 +134,42 @@ export default function App() {
       }
     }, 60)
   }
+
+  const researchPapers = [
+    {
+      id: 'bipedal-robot',
+      title: 'Non-Anthropomorphic Bipedal Robotic System',
+      authors: 'Amal R, Anandhu P Shaju, Jibin Thomas, Vishnu S, Anjana Manuel',
+      venue: 'National Conference on Recent Advances in Electrical and Electronics Engineering (NCREEE \'19)',
+      year: 2019,
+      abstract: 'A hybrid bipedal-wheeled robotic system designed to address the stability and motion limits of traditional anthropomorphic legged robots. By placing limbs in the sagittal plane and integrating wheeled drive units at contact points, the system achieves higher translation velocities and reduces hip-offset oscillations while maintaining vertical climbing and adaptability in uneven terrains.',
+      tags: ['Robotics', 'Kinematics', 'Hybrid Locomotion', 'Control Systems'],
+      link: 'https://mbcpeermade.com',
+      citation: 'Amal R, Anandhu P Shaju, Jibin Thomas, Vishnu S, Anjana Manuel. "Non-Anthropomorphic Bipedal Robotic System." NCREEE, 2019.'
+    },
+    {
+      id: 'dc-motor',
+      title: 'Speed and Direction Control of DC Motor through Wireless Communication',
+      authors: 'Anandhu P Shaju, Amal R, Jibin Thomas, Vishnu S, Anjana Manuel',
+      venue: 'National Conference on Recent Advances in Electrical and Electronics Engineering (NCREEE \'19)',
+      year: 2019,
+      abstract: 'Details the deployment of a wireless microcontroller-actuated system for DC motor velocity and direction profiling. Utilizing low-latency telemetry protocols, the system allows remote operators to query real-time angular feedback metrics and issue direct command overrides to maintain motor synchronization under varying payload boundaries.',
+      tags: ['Wireless Telemetry', 'ESP8266', 'DC Motors', 'Embedded Systems'],
+      link: 'https://mbcpeermade.com',
+      citation: 'Anandhu P Shaju, Amal R, Jibin Thomas, Vishnu S, Anjana Manuel. "Speed and Direction Control of DC Motor through Wireless Communication." NCREEE, 2019.'
+    },
+    {
+      id: 'threat-classification',
+      title: 'Intelligent Threat Classification in Cyber-Physical Nodes using LLM Reasoning',
+      authors: 'Anandhu P, et al.',
+      venue: 'Preprint / Technical Report',
+      year: 2026,
+      abstract: 'Explores the integration of lightweight reasoning agents on edge nodes in industrial micro-grids. The paper details how local threat models query the security state of AUBO controllers and ESP8266 networks, utilizing LLM-guided context extraction to identify telemetry spoofing and initiate rapid containment protocols.',
+      tags: ['AI Agents', 'Cyber-Physical Security', 'Threat Classification', 'Embedded Security'],
+      link: 'https://github.com/anandh0u',
+      citation: 'Anandhu P, et al. "Intelligent Threat Classification in Cyber-Physical Nodes using LLM Reasoning." Preprint, 2026.'
+    }
+  ];
 
   const technicalProjects = [
     {
@@ -205,10 +261,23 @@ export default function App() {
 
   const experience = [
     {
+      role: 'Project Lead',
+      company: 'Vtron',
+      location: 'Thrissur / Kochi (Remote / Hybrid)',
+      period: 'Nov 2025 – Present',
+      badge: '[ professional_record // active ]',
+      points: [
+        'Directing engineering and project management for intelligent hardware-software fusions and cyber-physical systems.',
+        'Overseeing design of modular robotics controllers, network infrastructure audits, and embedded systems integration.',
+        'Coordinating across multidisciplinary teams to ensure security protocols and safety compliance pipelines are met.'
+      ]
+    },
+    {
       role: 'Cybersecurity Intern',
       company: 'Cybernix YLLP',
       location: 'Kochi, Kerala',
       period: 'Sep 2025 – Oct 2025',
+      badge: '[ internship_record // completed ]',
       points: [
         'Worked on cybersecurity defense initiatives, understanding digital protection mechanisms.',
         'Assisted in forensic analysis and security investigations for virtual safety assessments.',
@@ -247,9 +316,10 @@ export default function App() {
               </div>
             </div>
             <nav className="nav-links">
-              {['home', 'about', 'projects', 'expertise', 'experience'].map((item) => (
+              {['home', 'about', 'research', 'projects', 'expertise', 'experience'].map((item) => (
                 <button
                   key={item}
+                  id={`nav-btn-${item}`}
                   className={activeNav === item ? 'nav-btn active' : 'nav-btn'}
                   onClick={() => scrollToSection(item)}
                 >
@@ -278,10 +348,10 @@ export default function App() {
                 I study the boundary where intelligent software meets hardware controls. As an engineer specializing in Cyber Physical Systems, I construct robotic safety frameworks, train speech ML classifiers, and program embedded hardware nodes.
               </p>
               <div className="hero-cta">
-                <button className="btn-primary" onClick={() => scrollToSection('about')}>
+                <button id="hero-btn-explore" className="btn-primary" onClick={() => scrollToSection('about')}>
                   explore engineering logs
                 </button>
-                <button className="btn-secondary" onClick={() => scrollToSection('contact')}>
+                <button id="hero-btn-connect" className="btn-secondary" onClick={() => scrollToSection('contact')}>
                   connect
                 </button>
               </div>
@@ -342,9 +412,10 @@ export default function App() {
                   flexWrap: 'wrap'
                 }}>
                   <span style={{ fontFamily: 'JetBrains Mono', fontSize: '11px', color: 'var(--text-secondary)' }}>Quick query:</span>
-                  {['about', 'skills', 'status', 'clear'].map((cmd) => (
+                  {['about', 'research', 'skills', 'status', 'clear'].map((cmd) => (
                     <button 
                       key={cmd}
+                      id={`terminal-shortcut-${cmd}`}
                       disabled={isTyping}
                       onClick={() => triggerShortcut(cmd)}
                       style={{ 
@@ -371,9 +442,14 @@ export default function App() {
       {/* About Section */}
       <section id="about" className="about">
         <div className="container">
-          <div className="section-header">
-            <h2>about me</h2>
-            <div className="header-line"></div>
+          <div className="section-header-row">
+            <div className="section-header">
+              <h2>about me</h2>
+              <div className="header-line"></div>
+            </div>
+            <div className="section-robot-wrapper">
+              <SectionRobot action="coffee" />
+            </div>
           </div>
 
           <div className="about-content">
@@ -438,6 +514,85 @@ export default function App() {
         </div>
       </section>
 
+      {/* Research & Publications Section */}
+      <section id="research" className="research">
+        <div className="container">
+          <div className="section-header-row">
+            <div className="section-header">
+              <h2>publications</h2>
+              <div className="header-line"></div>
+            </div>
+            <div className="section-robot-wrapper">
+              <SectionRobot action="reading" />
+            </div>
+          </div>
+
+          <div className="research-grid">
+            {researchPapers.map((paper) => {
+              const isExpanded = activePaperId === paper.id;
+              const isCopied = copiedPaperId === paper.id;
+              
+              return (
+                <div key={paper.id} className={`research-card ${isExpanded ? 'expanded' : ''}`}>
+                  <div className="research-header">
+                    <div className="research-meta">
+                      <span className="research-year">{paper.year}</span>
+                      <span className="research-divider">//</span>
+                      <span className="research-venue">{paper.venue}</span>
+                    </div>
+                    <h3 className="research-title">{paper.title}</h3>
+                    <p className="research-authors">{paper.authors}</p>
+                  </div>
+                  
+                  <div className="research-tags">
+                    {paper.tags.map((tag, idx) => (
+                      <span key={idx} className="tag">{tag}</span>
+                    ))}
+                  </div>
+
+                  <div className="research-actions">
+                    <button 
+                      id={`research-abstract-toggle-${paper.id}`}
+                      className={`btn-action toggle-abstract ${isExpanded ? 'active' : ''}`}
+                      onClick={() => setActivePaperId(isExpanded ? null : paper.id)}
+                    >
+                      {isExpanded ? '[ hide abstract ]' : '[ view abstract ]'}
+                    </button>
+                    <button 
+                      id={`research-citation-copy-${paper.id}`}
+                      className={`btn-action copy-citation ${isCopied ? 'copied' : ''}`}
+                      onClick={() => copyCitation(paper.id, paper.citation)}
+                    >
+                      {isCopied ? '[ copied! ]' : '[ copy citation ]'}
+                    </button>
+                    <a 
+                      id={`research-link-${paper.id}`}
+                      href={paper.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="research-link-btn"
+                    >
+                      [ link ]
+                    </a>
+                  </div>
+
+                  <div className={`abstract-drawer ${isExpanded ? 'open' : ''}`}>
+                    <div className="abstract-content">
+                      <h4>Abstract</h4>
+                      <p>{paper.abstract}</p>
+                      <div className="citation-preview">
+                        <h5>Citation (IEEE format)</h5>
+                        <code>{paper.citation}</code>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Featured Projects Section */}
       <section id="projects" className="projects">
         <div className="container">
@@ -456,6 +611,7 @@ export default function App() {
             ].map((tab) => (
               <button
                 key={tab.id}
+                id={`project-filter-${tab.id}`}
                 className={activeCategory === tab.id ? 'filter-btn active' : 'filter-btn'}
                 onClick={() => setActiveCategory(tab.id)}
               >
@@ -485,9 +641,14 @@ export default function App() {
       {/* Expertise Section */}
       <section id="expertise" className="expertise">
         <div className="container">
-          <div className="section-header">
-            <h2>technical skills</h2>
-            <div className="header-line"></div>
+          <div className="section-header-row">
+            <div className="section-header">
+              <h2>technical skills</h2>
+              <div className="header-line"></div>
+            </div>
+            <div className="section-robot-wrapper">
+              <SectionRobot action="working" />
+            </div>
           </div>
 
           <div className="expertise-grid">
@@ -519,7 +680,7 @@ export default function App() {
               <div className="experience-list">
                 {experience.map((exp, i) => (
                   <div key={i} className="experience-card">
-                    <div className="exp-badge">[ internship_record // completed ]</div>
+                    <div className="exp-badge">{exp.badge}</div>
                     <div className="exp-header">
                       <h3>{exp.role}</h3>
                       <span className="exp-company">{exp.company}</span>
@@ -570,14 +731,14 @@ export default function App() {
             <p>I am open to discussions regarding internship collaborations, robotic system designs, AI implementations, or sensor integrations. Drop a line to start a dialogue.</p>
             
             <div className="contact-details" style={{ margin: '30px auto', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', fontFamily: 'JetBrains Mono', fontSize: '13px' }}>
-              <div><span style={{ color: 'var(--accent)' }}>primary_email //</span> <a href="mailto:anandhupulikkl22@gmail.com">anandhupulikkl22@gmail.com</a></div>
-              <div><span style={{ color: 'var(--accent)' }}>academic_email //</span> <a href="mailto:24b771.anandhu@gectcr.ac.in">24b771.anandhu@gectcr.ac.in</a></div>
-              <div><span style={{ color: 'var(--accent)' }}>alternate_email //</span> <a href="mailto:anandhup167@gmail.com">anandhup167@gmail.com</a></div>
+              <div><span style={{ color: 'var(--accent)' }}>primary_email //</span> <a id="email-primary" href="mailto:anandhupulikkl22@gmail.com">anandhupulikkl22@gmail.com</a></div>
+              <div><span style={{ color: 'var(--accent)' }}>academic_email //</span> <a id="email-academic" href="mailto:24b771.anandhu@gectcr.ac.in">24b771.anandhu@gectcr.ac.in</a></div>
+              <div><span style={{ color: 'var(--accent)' }}>alternate_email //</span> <a id="email-alternate" href="mailto:anandhup167@gmail.com">anandhup167@gmail.com</a></div>
             </div>
 
             <div className="social-links">
-              <a href="https://github.com/anandh0u" target="_blank" rel="noopener noreferrer" className="social-link">github</a>
-              <a href="https://www.linkedin.com/in/anandhu-p-6ba98231a/" target="_blank" rel="noopener noreferrer" className="social-link">linkedin</a>
+              <a id="social-github" href="https://github.com/anandh0u" target="_blank" rel="noopener noreferrer" className="social-link">github</a>
+              <a id="social-linkedin" href="https://www.linkedin.com/in/anandhu-p-6ba98231a/" target="_blank" rel="noopener noreferrer" className="social-link">linkedin</a>
             </div>
           </div>
         </div>

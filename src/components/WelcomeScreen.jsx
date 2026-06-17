@@ -5,12 +5,12 @@ export default function WelcomeScreen({ onEnter }) {
   const [doorsOpen, setDoorsOpen] = useState(false)
   const [isSwaying, setIsSwaying] = useState(false)
   const [isVisible, setIsVisible] = useState(true)
+  const [boardCollapsing, setBoardCollapsing] = useState(false)
   
   const canvasRef = useRef(null)
   const requestRef = useRef(null)
   
   useEffect(() => {
-    // Disable scroll on body while the welcome screen is active
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = ''
@@ -20,28 +20,13 @@ export default function WelcomeScreen({ onEnter }) {
   const handleStartTransition = () => {
     if (phase !== 'idle') return
     setPhase('transitioning')
-    setDoorsOpen(true)
+    setBoardCollapsing(true)
     setIsSwaying(true)
 
     // Stop swaying after some time
     setTimeout(() => {
-      setIsSwaying(false);
-    }, 1500);
-
-    // Call the parent enter function when the screen is fully covered by petals
-    setTimeout(() => {
-      onEnter()
-      document.body.style.overflow = ''
-    }, 1800)
-
-    // Complete the transition and fade out the entire welcome screen
-    setTimeout(() => {
-      setPhase('complete')
-      // Let it fade out, then completely remove it from layout
-      setTimeout(() => {
-        setIsVisible(false)
-      }, 1000)
-    }, 2200)
+      setIsSwaying(false)
+    }, 1500)
   }
 
   useEffect(() => {
@@ -58,197 +43,283 @@ export default function WelcomeScreen({ onEnter }) {
     }
     window.addEventListener('resize', handleResize)
     
-    // Sakura colors (various soft pinks and blushes)
-    const COLORS = [
-      'rgba(255, 183, 197, 0.58)', // Cherry Pink
-      'rgba(255, 166, 201, 0.54)', // Bright Blossom Pink
-      'rgba(255, 204, 213, 0.62)', // Soft White-Pink
-      'rgba(255, 105, 180, 0.44)', // Hot Pink highlight
-      'rgba(244, 154, 193, 0.56)'  // Classic Sakura
-    ]
-    
-    let globalFogDensity = 0 // Blackout overlay density
-    let hasTriggeredBlast = false
-    
-    // Sakura Petal Class
-    class SakuraPetal {
-      constructor(isNew = false) {
-        this.reset(isNew)
-      }
-      
-      reset(isNew = false) {
-        this.originalSize = Math.random() * 8 + 6
-        this.size = this.originalSize
-        
-        if (phase === 'transitioning') {
-          // Spawn near the center vortex or enter from the side
-          if (Math.random() > 0.5) {
-            this.x = width / 2 + (Math.random() - 0.5) * 100
-            this.y = height / 2 + (Math.random() - 0.5) * 100
-            const angle = Math.random() * Math.PI * 2
-            const speed = Math.random() * 12 + 6
-            this.vx = Math.cos(angle) * speed
-            this.vy = Math.sin(angle) * speed
-          } else {
-            this.x = Math.random() * -100 - 20
-            this.y = Math.random() * height
-            this.vx = Math.random() * 6 + 4
-            this.vy = Math.random() * 4 + 2
-          }
-        } else {
-          // Idle drift
-          this.x = isNew ? Math.random() * -100 - 20 : Math.random() * width
-          this.y = Math.random() * height
-          this.vx = Math.random() * 1.5 + 1.2
-          this.vy = Math.random() * 0.8 + 0.4
-        }
-        
-        this.rotation = Math.random() * Math.PI * 2
-        this.rotationSpeed = (Math.random() - 0.5) * 0.04
-        this.tilt = Math.random()
-        this.tiltAngle = Math.random() * Math.PI
-        this.tiltSpeed = Math.random() * 0.03 + 0.01
-        
-        this.oscillationAngle = Math.random() * Math.PI
-        this.oscillationSpeed = Math.random() * 0.02 + 0.01
-        this.oscillationDistance = Math.random() * 2 + 1
-        
-        this.color = COLORS[Math.floor(Math.random() * COLORS.length)]
-      }
-      
-      update() {
-        if (phase === 'transitioning') {
-          // Grow sizes to cover the screen completely
-          if (this.size < this.originalSize * 2.8) {
-            this.size += 0.06
-          }
-          
-          // Swirl vortex centered around the screen center
-          const dx = this.x - width / 2
-          const dy = this.y - height / 2
-          const dist = Math.sqrt(dx * dx + dy * dy)
-          
-          if (dist > 10) {
-            const angle = Math.atan2(dy, dx)
-            const swirlForce = 0.22
-            const radialForce = 0.08
-            
-            this.vx += -Math.sin(angle) * swirlForce + Math.cos(angle) * radialForce
-            this.vy += Math.cos(angle) * swirlForce + Math.sin(angle) * radialForce
-          }
-          
-          // Speed limit cap
-          const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy)
-          if (speed > 16) {
-            this.vx = (this.vx / speed) * 16
-            this.vy = (this.vy / speed) * 16
-          }
-        } else {
-          // Gentle drift velocities
-          this.vx += ( (Math.random() * 1.5 + 1.2) - this.vx ) * 0.05
-          this.vy += ( (Math.random() * 0.8 + 0.4) - this.vy ) * 0.05
-        }
-        
-        this.x += this.vx + Math.sin(this.oscillationAngle) * this.oscillationDistance
-        this.y += this.vy
-        
-        this.rotation += this.rotationSpeed
-        this.tiltAngle += this.tiltSpeed
-        this.tilt = Math.sin(this.tiltAngle) * 0.8
-        this.oscillationAngle += this.oscillationSpeed
-        
-        // Reset if offscreen (wider bounds in transition to keep screen covered)
-        const bound = phase === 'transitioning' ? 250 : 40
-        if (this.x > width + bound || this.y > height + bound || this.x < -bound || this.y < -bound) {
-          this.reset(true)
-        }
-      }
-      
-      draw(c) {
-        c.save()
-        c.translate(this.x, this.y)
-        c.rotate(this.rotation)
-        c.scale(1, this.tilt)
-        
-        c.beginPath()
-        c.fillStyle = this.color
-        c.shadowBlur = 2
-        c.shadowColor = 'rgba(255, 183, 197, 0.22)'
-        
-        c.moveTo(0, 0)
-        c.bezierCurveTo(
-          -this.size / 2, -this.size / 2, 
-          -this.size / 2, -this.size * 1.2, 
-          0, -this.size * 1.5
-        )
-        c.bezierCurveTo(
-          this.size * 0.15, -this.size * 1.4, 
-          this.size * 0.35, -this.size * 1.4, 
-          this.size * 0.5, -this.size * 1.5
-        )
-        c.bezierCurveTo(
-          this.size / 2, -this.size * 1.2, 
-          this.size / 2, -this.size / 2, 
-          0, 0
-        )
-        
-        c.fill()
-        c.restore()
-      }
+    // Robot Animation State Variables
+    let robot = {
+      x: width / 2,
+      y: -150,
+      vy: 0,
+      gravity: 0.7,
+      bounce: -0.4,
+      floorY: height * 0.68,
+      scale: 1.6, // Big robot in welcome screen
+      squish: 1.0,
+      state: 'falling', // falling, landing, standing, confused, hi, running
+      eyeOffsetX: 0,
+      time: 0,
+      showBubble: false,
+      runSpeed: 0,
+      stateTime: 0 // Local timer/frame counter for state robustness
     }
     
-    // Sakura petals collection
-    let petals = []
-    const maxIdlePetals = 32
-    const maxTransitionPetals = 260
+    let transitionStartedTime = null
+    let globalFogDensity = 0
+    let hasRevealedProfile = false
     
-    for (let i = 0; i < maxIdlePetals; i++) {
-      petals.push(new SakuraPetal(false))
-    }
-    
-    // Main animation loop
     const animate = () => {
       ctx.clearRect(0, 0, width, height)
+      robot.time++
       
-      // Update and draw transition particles
+      // Update Robot State and Physics
       if (phase === 'transitioning') {
-        // Trigger initial blast once at start of transition
-        if (!hasTriggeredBlast) {
-          hasTriggeredBlast = true
-          // Spawn a softer burst of petals at the center
-          for (let i = 0; i < 140; i++) {
-            const angle = Math.random() * Math.PI * 2
-            const speed = Math.random() * 14 + 6
-            const petal = new SakuraPetal(true)
-            petal.x = width / 2
-            petal.y = height / 2
-            petal.vx = Math.cos(angle) * speed
-            petal.vy = Math.sin(angle) * speed
-            petal.rotationSpeed = (Math.random() - 0.5) * 0.25
-            petal.tiltSpeed = Math.random() * 0.09 + 0.05
-            petals.push(petal)
+        if (!transitionStartedTime) {
+          transitionStartedTime = Date.now()
+        }
+        
+        if (robot.state === 'falling') {
+          // Physics fall
+          robot.vy += robot.gravity
+          robot.y += robot.vy
+          
+          if (robot.y >= robot.floorY) {
+            robot.y = robot.floorY
+            robot.vy = robot.vy * robot.bounce
+            robot.squish = 0.6 // landing impact squish
+            
+            if (Math.abs(robot.vy) < 1.5) {
+              robot.vy = 0
+              robot.state = 'standing'
+              robot.stateTime = 0
+            }
+          }
+        } else if (robot.state === 'standing') {
+          // Recover from squish slowly
+          robot.squish += (1.0 - robot.squish) * 0.15
+          if (Math.abs(robot.squish - 1.0) < 0.02) {
+            robot.squish = 1.0
+            robot.state = 'confused'
+            robot.stateTime = 0
+          }
+        } else if (robot.state === 'confused') {
+          robot.stateTime++
+          // Head shake and eye look around (60 frames ~1s)
+          robot.eyeOffsetX = Math.sin(robot.time * 0.15) * 8
+          if (robot.stateTime > 60) {
+            robot.state = 'hi'
+            robot.stateTime = 0
+            robot.eyeOffsetX = 0
+            robot.showBubble = true
+          }
+        } else if (robot.state === 'hi') {
+          robot.stateTime++
+          // Wave and say hi (80 frames ~1.3s)
+          if (robot.stateTime > 80) {
+            robot.state = 'running'
+            robot.stateTime = 0
+            robot.showBubble = false
+          }
+        } else if (robot.state === 'running') {
+          // Run off screen
+          robot.runSpeed = Math.min(robot.runSpeed + 0.6, 12)
+          robot.x += robot.runSpeed
+          
+          // Trigger door open & profile popup when robot leaves screen
+          if (robot.x > width + 150 && !hasRevealedProfile) {
+            hasRevealedProfile = true
+            setDoorsOpen(true)
+            onEnter()
+            document.body.style.overflow = ''
+            
+            // Fade welcome screen out
+            setTimeout(() => {
+              setPhase('complete')
+              setTimeout(() => {
+                setIsVisible(false)
+              }, 1000)
+            }, 500)
           }
         }
         
-        // Increase blackout overlay density
-        globalFogDensity = Math.min(globalFogDensity + 0.008, 1.0)
-        
-        // Spawn a lighter follow-up breeze of petals
-        if (petals.length < maxTransitionPetals) {
-          const spawnCount = Math.min(5, maxTransitionPetals - petals.length)
-          for (let i = 0; i < spawnCount; i++) {
-            petals.push(new SakuraPetal(true))
-          }
+        // Solid transition overlay fade
+        if (hasRevealedProfile) {
+          globalFogDensity = Math.min(globalFogDensity + 0.03, 1.0)
         }
       }
       
-      // Update and draw sakura petals
-      petals.forEach((petal) => {
-        petal.update()
-        petal.draw(ctx)
-      })
+      // Draw Vector Robot
+      if (phase === 'transitioning') {
+        const { x, y, scale, squish, state, eyeOffsetX, time } = robot
+        
+        // --- DRAW SPEECH BUBBLE ---
+        if (robot.showBubble) {
+          ctx.save()
+          ctx.translate(x, y - 110 * scale)
+          ctx.fillStyle = '#ff007f'
+          ctx.strokeStyle = '#ffffff'
+          ctx.lineWidth = 1.5
+          ctx.beginPath()
+          ctx.roundRect(-45 * scale, -22 * scale, 90 * scale, 38 * scale, 8 * scale)
+          ctx.fill()
+          ctx.stroke()
+          
+          // bubble arrow pointer
+          ctx.fillStyle = '#ff007f'
+          ctx.beginPath()
+          ctx.moveTo(-8 * scale, 16 * scale)
+          ctx.lineTo(0, 24 * scale)
+          ctx.lineTo(8 * scale, 16 * scale)
+          ctx.fill()
+          ctx.stroke()
+          
+          // text
+          ctx.fillStyle = '#ffffff'
+          ctx.font = `bold ${13 * scale}px 'JetBrains Mono', monospace`
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText('hii!', 0, -2 * scale)
+          ctx.restore()
+        }
+        
+        // --- DRAW ROBOT BASE/WHEELS ---
+        ctx.save()
+        ctx.translate(x, y + 42 * scale)
+        ctx.scale(1, squish)
+        ctx.fillStyle = '#334155'
+        ctx.beginPath()
+        ctx.roundRect(-30 * scale, -8 * scale, 60 * scale, 16 * scale, 8 * scale)
+        ctx.fill()
+        
+        // Little wheels rolling if running
+        ctx.fillStyle = '#0f172a'
+        const wheelRotation = state === 'running' ? (time * 0.3) % (Math.PI * 2) : 0
+        for (let i = -18; i <= 18; i += 18) {
+          ctx.save()
+          ctx.translate(i * scale, 0)
+          ctx.rotate(wheelRotation)
+          ctx.beginPath()
+          ctx.arc(0, 0, 5 * scale, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.fillStyle = '#ffffff'
+          ctx.fillRect(-1 * scale, -4 * scale, 2 * scale, 8 * scale)
+          ctx.restore()
+        }
+        ctx.restore()
+
+        // --- DRAW ROBOT ARMS ---
+        // Left arm waving or running
+        ctx.save()
+        ctx.translate(x - 45 * scale, y - 5 * scale)
+        if (state === 'hi') {
+          // Wave arm up and down
+          const waveAngle = Math.sin(time * 0.15) * 0.6 - 0.9
+          ctx.rotate(waveAngle)
+        } else if (state === 'running') {
+          ctx.rotate(Math.sin(time * 0.25) * 0.6)
+        }
+        ctx.fillStyle = '#ffffff'
+        ctx.beginPath()
+        ctx.roundRect(-7 * scale, -12 * scale, 14 * scale, 34 * scale, 7 * scale)
+        ctx.fill()
+        ctx.strokeStyle = '#cbd5e1'
+        ctx.lineWidth = 1.5
+        ctx.stroke()
+        ctx.restore()
+
+        // Right arm
+        ctx.save()
+        ctx.translate(x + 45 * scale, y - 5 * scale)
+        if (state === 'running') {
+          ctx.rotate(-Math.sin(time * 0.25) * 0.6)
+        }
+        ctx.fillStyle = '#ffffff'
+        ctx.beginPath()
+        ctx.roundRect(-7 * scale, -12 * scale, 14 * scale, 34 * scale, 7 * scale)
+        ctx.fill()
+        ctx.strokeStyle = '#cbd5e1'
+        ctx.lineWidth = 1.5
+        ctx.stroke()
+        ctx.restore()
+
+        // --- DRAW ROBOT BODY ---
+        ctx.save()
+        ctx.translate(x, y)
+        ctx.scale(1, squish)
+        ctx.fillStyle = '#ffffff'
+        ctx.beginPath()
+        ctx.roundRect(-36 * scale, -22 * scale, 72 * scale, 64 * scale, 22 * scale)
+        ctx.fill()
+        ctx.strokeStyle = '#cbd5e1'
+        ctx.lineWidth = 1.5
+        ctx.stroke()
+
+        // Chest Screen
+        ctx.fillStyle = '#1e1b4b'
+        ctx.beginPath()
+        ctx.roundRect(-18 * scale, -10 * scale, 36 * scale, 22 * scale, 5 * scale)
+        ctx.fill()
+        // Chest Heartbeat / Wave
+        ctx.strokeStyle = '#ff007f'
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.moveTo(-13 * scale, 1 * scale)
+        ctx.lineTo(-5 * scale, 1 * scale)
+        ctx.lineTo(-2 * scale, -6 * scale)
+        ctx.lineTo(2 * scale, 7 * scale)
+        ctx.lineTo(5 * scale, 1 * scale)
+        ctx.lineTo(13 * scale, 1 * scale)
+        ctx.stroke()
+        ctx.restore()
+
+        // --- DRAW ROBOT HEAD ---
+        ctx.save()
+        ctx.translate(x, y - 62 * scale * squish)
+        ctx.scale(1, squish)
+        ctx.fillStyle = '#ffffff'
+        ctx.beginPath()
+        ctx.roundRect(-42 * scale, -28 * scale, 84 * scale, 56 * scale, 28 * scale)
+        ctx.fill()
+        ctx.strokeStyle = '#cbd5e1'
+        ctx.lineWidth = 1.5
+        ctx.stroke()
+
+        // Black Visor
+        ctx.fillStyle = '#0f172a'
+        ctx.beginPath()
+        ctx.roundRect(-34 * scale, -17 * scale, 68 * scale, 34 * scale, 17 * scale)
+        ctx.fill()
+
+        // Visor glowing blue eyes
+        ctx.fillStyle = '#00f0ff'
+        ctx.shadowBlur = 8 * scale
+        ctx.shadowColor = '#00f0ff'
+
+        if (state === 'confused') {
+          // Draw slanted confused eyes
+          ctx.beginPath()
+          ctx.arc(-14 * scale + eyeOffsetX, 0, 4.5 * scale, 0, Math.PI * 2)
+          ctx.arc(14 * scale + eyeOffsetX, -2 * scale, 4.5 * scale, 0, Math.PI * 2)
+          ctx.fill()
+        } else if (state === 'hi') {
+          // Happy wink eyes
+          ctx.beginPath()
+          ctx.arc(-14 * scale, 0, 5 * scale, 0, Math.PI * 2)
+          ctx.fill()
+          // Arc wink eye
+          ctx.strokeStyle = '#00f0ff'
+          ctx.lineWidth = 3.5
+          ctx.beginPath()
+          ctx.arc(14 * scale, 0, 6 * scale, Math.PI, 0)
+          ctx.stroke()
+        } else {
+          // Normal round eyes
+          ctx.beginPath()
+          ctx.arc(-14 * scale + eyeOffsetX, 0, 5 * scale, 0, Math.PI * 2)
+          ctx.arc(14 * scale + eyeOffsetX, 0, 5 * scale, 0, Math.PI * 2)
+          ctx.fill()
+        }
+        ctx.restore()
+      }
       
-      // Solid blackout overlay as fog becomes absolute (tinted with deep midnight rose)
+      // Blackout fade-to-color overlay when doors open
       if (globalFogDensity > 0) {
         ctx.fillStyle = `rgba(15, 8, 20, ${globalFogDensity})`
         ctx.fillRect(0, 0, width, height)
@@ -269,7 +340,7 @@ export default function WelcomeScreen({ onEnter }) {
   
   return (
     <div className={`welcome-overlay ${phase === 'complete' ? 'fade-out' : ''} ${isSwaying ? 'wind-sway-effect' : ''}`}>
-      {/* Background canvas for particles and sakura petals */}
+      {/* Background canvas for vector robot and portal transitions */}
       <canvas ref={canvasRef} className="welcome-canvas" />
       
       {/* Doors Section */}
@@ -284,20 +355,20 @@ export default function WelcomeScreen({ onEnter }) {
         </div>
       </div>
       
-      {/* Center lock and welcome text */}
-      <div className={`portal-trigger-wrapper ${doorsOpen ? 'portal-disappear' : ''}`}>
-        <button className="portal-gate-btn" onClick={handleStartTransition}>
-          <div className="portal-ring ring-outer"></div>
-          <div className="portal-ring ring-mid"></div>
-          <div className="portal-ring ring-inner"></div>
-          
-          <div className="portal-content">
-            <span className="portal-label">initiate_session</span>
-            <h1 className="portal-title">welcome to my portfolio</h1>
-            <div className="portal-glow-line"></div>
+      {/* Modern Welcome Board Overlay */}
+      <div className={`welcome-board-wrapper ${boardCollapsing ? 'collapsing' : ''}`}>
+        <div className="welcome-board-card">
+          <div className="board-decor-dots">
+            <span className="dot-red"></span>
+            <span className="dot-yellow"></span>
+            <span className="dot-green"></span>
           </div>
-        </button>
-        <p className="portal-hint">click to unlock system gateway</p>
+          <p className="board-meta">[ query_greeting // handshake ]</p>
+          <h2 className="board-text">hey... wanna explore about me?</h2>
+          <button id="welcome-start-btn" className="board-start-btn" onClick={handleStartTransition}>
+            start
+          </button>
+        </div>
       </div>
     </div>
   )
