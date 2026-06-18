@@ -149,21 +149,23 @@ export default function SectionRobot({ action = 'coffee' }) {
     const metallicGrad = (c, hx, hy, hr, tx, ty, tr) => {
       const g = c.createRadialGradient(hx, hy, hr, tx, ty, tr)
       g.addColorStop(0,   '#ffffff')
-      g.addColorStop(0.15,'#f9fbff')
-      g.addColorStop(0.55,'#e8f0f8')
-      g.addColorStop(0.82,'#c5d4e8')
-      g.addColorStop(1,   '#8fa8c8')
+      g.addColorStop(0.15, '#fafcff')
+      g.addColorStop(0.45, '#dbe5f0')
+      g.addColorStop(0.70, '#b0c7db')
+      g.addColorStop(0.85, '#8ba3bf')
+      g.addColorStop(0.95, '#5c7894')
+      g.addColorStop(1,    '#435a70')
       return g
     }
 
     // ─── Rim Light Effect ───────────────────────────────────────────────
-    const rimLight = (c, x, y, rx, ry, color = 'rgba(0,240,255,0.18)') => {
+    const rimLight = (c, x, y, rx, ry, color = 'rgba(0,240,255,0.22)') => {
       const stroke = c.createLinearGradient(x - rx, y, x + rx, y)
       stroke.addColorStop(0, color)
       stroke.addColorStop(0.5, 'rgba(255,255,255,0)')
       stroke.addColorStop(1, color)
       c.strokeStyle = stroke
-      c.lineWidth = 1.5
+      c.lineWidth = 1.8
       c.beginPath()
       c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2)
       c.stroke()
@@ -175,27 +177,37 @@ export default function SectionRobot({ action = 'coffee' }) {
 
       // Neck joint
       const neckG = ctx.createLinearGradient(-5 * S, -28 * S, 5 * S, -22 * S)
-      neckG.addColorStop(0, '#c0d0e0')
+      neckG.addColorStop(0, '#b8cfe8')
       neckG.addColorStop(0.5, '#e8f0f8')
-      neckG.addColorStop(1, '#8fa8c8')
+      neckG.addColorStop(1, '#7a94b4')
       ctx.fillStyle = neckG
       ctx.beginPath()
       ctx.ellipse(0, -30 * S, 9 * S, 6 * S, 0, 0, Math.PI * 2)
       ctx.fill()
 
-      // Head - egg ellipse
+      // Head egg body
       ctx.fillStyle = metallicGrad(ctx, -10 * S, -53 * S, 4 * S, 0, hy, 40 * S)
       ctx.beginPath()
       ctx.ellipse(hx, hy, 36 * S, 27 * S, 0, 0, Math.PI * 2)
       ctx.fill()
-
-      // Rim light on head
       rimLight(ctx, hx, hy, 36 * S, 27 * S, 'rgba(0,240,255,0.15)')
 
-      // Head top specular highlight
+      // Head panel seam
+      ctx.strokeStyle = 'rgba(8, 15, 28, 0.16)'
+      ctx.lineWidth = 1 * S
+      ctx.beginPath()
+      ctx.ellipse(hx, hy + 2 * S, 35.5 * S, 26.5 * S, 0, -Math.PI * 0.8, -Math.PI * 0.2)
+      ctx.stroke()
+      // panel split highlight
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'
+      ctx.beginPath()
+      ctx.ellipse(hx, hy + 3 * S, 35.5 * S, 26.5 * S, 0, -Math.PI * 0.8, -Math.PI * 0.2)
+      ctx.stroke()
+
+      // Head top gloss spec highlight
       const specG = ctx.createRadialGradient(-12 * S, -56 * S, 0, -8 * S, -52 * S, 20 * S)
-      specG.addColorStop(0, 'rgba(255,255,255,0.65)')
-      specG.addColorStop(0.4, 'rgba(255,255,255,0.2)')
+      specG.addColorStop(0, 'rgba(255,255,255,0.72)')
+      specG.addColorStop(0.4, 'rgba(255,255,255,0.22)')
       specG.addColorStop(1, 'rgba(255,255,255,0)')
       ctx.fillStyle = specG
       ctx.beginPath()
@@ -205,42 +217,59 @@ export default function SectionRobot({ action = 'coffee' }) {
       // Antenna
       ctx.save()
       ctx.translate(14 * S, -66 * S)
+      // Antenna base
+      ctx.fillStyle = '#6c82a0'
+      ctx.beginPath(); ctx.ellipse(0, 0, 2.5 * S, 1 * S, 0, 0, Math.PI * 2); ctx.fill()
+      // Antenna rod
       const antG = ctx.createLinearGradient(-1, -8 * S, 1, 0)
-      antG.addColorStop(0, '#b8cfe8')
+      antG.addColorStop(0, '#9bb0c8')
       antG.addColorStop(1, '#d0e4f8')
       ctx.strokeStyle = antG; ctx.lineWidth = 2 * S
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -10 * S); ctx.stroke()
-      // antenna ball
+      // Antenna glass emitter
       const abG = ctx.createRadialGradient(-1.5 * S, -13 * S, 0, 0, -10 * S, 4 * S)
       abG.addColorStop(0, '#ffffff')
-      abG.addColorStop(0.5, '#00f0ff')
-      abG.addColorStop(1, '#0080ff')
+      abG.addColorStop(0.45, '#00f0ff')
+      abG.addColorStop(1, '#0058b8')
       ctx.fillStyle = abG
       ctx.shadowBlur = 6; ctx.shadowColor = '#00f0ff'
       ctx.beginPath(); ctx.arc(0, -10 * S, 3.5 * S, 0, Math.PI * 2); ctx.fill()
       ctx.shadowBlur = 0
       ctx.restore()
 
-      // Visor — glossy dark glass
+      // Visor bezel ring
+      ctx.strokeStyle = 'rgba(100, 130, 160, 0.45)'
+      ctx.lineWidth = 1.2 * S
+      ctx.beginPath()
+      ctx.ellipse(hx, hy, 28.5 * S, 15.5 * S, 0, 0, Math.PI * 2)
+      ctx.stroke()
+
+      // Deep visor recess shadow
+      ctx.fillStyle = 'rgba(5, 8, 15, 0.45)'
+      ctx.beginPath()
+      ctx.ellipse(hx, hy + 0.8 * S, 27.5 * S, 14.5 * S, 0, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Visor faceplate glossy dark glass
       const vg = ctx.createLinearGradient(0, -56 * S, 0, -35 * S)
       vg.addColorStop(0, '#010b1a')
-      vg.addColorStop(0.5, '#0d1f35')
-      vg.addColorStop(1, '#152840')
+      vg.addColorStop(0.5, '#0c1e3a')
+      vg.addColorStop(1, '#152844')
       ctx.fillStyle = vg
       ctx.beginPath()
       ctx.ellipse(hx, hy, 27 * S, 14 * S, 0, 0, Math.PI * 2)
       ctx.fill()
 
-      // Visor edge glow
-      ctx.strokeStyle = 'rgba(0,240,255,0.25)'
+      // Visor glow edge
+      ctx.strokeStyle = 'rgba(0,240,255,0.32)'
       ctx.lineWidth = 1.2
       ctx.beginPath()
       ctx.ellipse(hx, hy, 27 * S, 14 * S, 0, 0, Math.PI * 2)
       ctx.stroke()
 
-      // Visor glass sheen
+      // Visor glass sheen reflection
       const vsG = ctx.createLinearGradient(-18 * S, -55 * S, 12 * S, -42 * S)
-      vsG.addColorStop(0, 'rgba(255,255,255,0.18)')
+      vsG.addColorStop(0, 'rgba(255,255,255,0.22)')
       vsG.addColorStop(0.4, 'rgba(255,255,255,0.06)')
       vsG.addColorStop(1, 'rgba(255,255,255,0)')
       ctx.fillStyle = vsG
@@ -248,33 +277,52 @@ export default function SectionRobot({ action = 'coffee' }) {
       ctx.ellipse(-4 * S, hy - 3 * S, 20 * S, 8 * S, -0.15, 0, Math.PI * 2)
       ctx.fill()
 
-      // Eyes
+      // Visor secondary glint reflection
+      const vsG2 = ctx.createRadialGradient(-11 * S, hy - 7 * S, 0, -11 * S, hy - 7 * S, 5 * S)
+      vsG2.addColorStop(0, 'rgba(255, 255, 255, 0.45)')
+      vsG2.addColorStop(1, 'rgba(255, 255, 255, 0)')
+      ctx.fillStyle = vsG2
+      ctx.beginPath()
+      ctx.arc(-11 * S, hy - 6 * S, 4.2 * S, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Eyes rendering
       ctx.save()
       ctx.translate(eyeOffsetX, 0)
       const isBlinking = time % 180 < 7
 
       if (isBlinking) {
         ctx.fillStyle = '#00f0ff'
-        ctx.shadowBlur = 5; ctx.shadowColor = '#00f0ff'
+        ctx.shadowBlur = 6; ctx.shadowColor = '#00f0ff'
         ctx.fillRect(-19 * S, hy - 0.8 * S, 8 * S, 1.5 * S)
         ctx.fillRect(11 * S, hy - 0.8 * S, 8 * S, 1.5 * S)
       } else if (eyeState === 'happy') {
         ctx.strokeStyle = '#00f0ff'
         ctx.shadowBlur = 8; ctx.shadowColor = '#00f0ff'
         ctx.lineWidth = 2.5 * S; ctx.lineCap = 'round'
-        ctx.beginPath(); ctx.arc(-14 * S, hy, 4.5 * S, Math.PI, 0); ctx.stroke()
-        ctx.beginPath(); ctx.arc(14 * S, hy, 4.5 * S, Math.PI, 0); ctx.stroke()
+        ctx.beginPath(); ctx.arc(-14 * S, hy + 1 * S, 4.5 * S, Math.PI, 0); ctx.stroke()
+        ctx.beginPath(); ctx.arc(14 * S, hy + 1 * S, 4.5 * S, Math.PI, 0); ctx.stroke()
       } else if (eyeState === 'wink') {
         ctx.strokeStyle = '#00f0ff'
         ctx.shadowBlur = 8; ctx.shadowColor = '#00f0ff'
         ctx.lineWidth = 2.5 * S; ctx.lineCap = 'round'
-        // one closed arc, one open circle
-        ctx.beginPath(); ctx.arc(-14 * S, hy - 1 * S, 4.5 * S, Math.PI, 0); ctx.stroke()
-        ctx.beginPath()
-        ctx.ellipse(14 * S, hy, 5 * S, 3.2 * S, 0, 0, Math.PI * 2)
-        ctx.fillStyle = '#00f0ff'; ctx.fill()
+        ctx.beginPath(); ctx.arc(-14 * S, hy + 1 * S, 4.5 * S, Math.PI, 0); ctx.stroke()
+        ctx.shadowBlur = 0
+        // glowing open eye lens
+        const eyeG = ctx.createRadialGradient(14 * S - 1.5 * S, hy - 1 * S, 0, 14 * S, hy, 5 * S)
+        eyeG.addColorStop(0, '#ffffff')
+        eyeG.addColorStop(0.25, '#9bf6ff')
+        eyeG.addColorStop(0.55, '#00dfff')
+        eyeG.addColorStop(0.85, '#007cdb')
+        eyeG.addColorStop(1, '#003a8a')
+        ctx.fillStyle = eyeG
+        ctx.shadowBlur = 12; ctx.shadowColor = '#00f0ff'
+        ctx.beginPath(); ctx.ellipse(14 * S, hy, 5.5 * S, 3.2 * S, 0, 0, Math.PI * 2); ctx.fill()
+        ctx.shadowBlur = 0
+        // reflect
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.65)'
+        ctx.beginPath(); ctx.ellipse(12.5 * S, hy - 1 * S, 1.5 * S, 0.8 * S, -0.3, 0, Math.PI * 2); ctx.fill()
       } else if (eyeState === 'scan') {
-        // Scanning horizontal bars
         const sc = Math.sin(time * 0.07) * 4 * S
         ctx.fillStyle = '#00f0ff'
         ctx.shadowBlur = 7; ctx.shadowColor = '#00f0ff'
@@ -283,34 +331,65 @@ export default function SectionRobot({ action = 'coffee' }) {
         ctx.rect(11 * S, hy - 4 * S + sc, 8 * S, 3 * S)
         ctx.fill()
       } else {
-        // Normal glowing capsule eyes
-        const eyeG = ctx.createRadialGradient(-14 * S, hy - 1 * S, 0, -14 * S, hy, 6 * S)
-        eyeG.addColorStop(0, '#80ffff')
-        eyeG.addColorStop(0.5, '#00f0ff')
-        eyeG.addColorStop(1, '#00aadd')
-        ctx.fillStyle = eyeG
-        ctx.shadowBlur = 10; ctx.shadowColor = '#00f0ff'
-        ctx.beginPath()
-        ctx.ellipse(-14 * S, hy, 5.5 * S, 3.2 * S, 0, 0, Math.PI * 2)
-        ctx.fill()
-        const eyeG2 = ctx.createRadialGradient(14 * S, hy - 1 * S, 0, 14 * S, hy, 6 * S)
-        eyeG2.addColorStop(0, '#80ffff')
-        eyeG2.addColorStop(0.5, '#00f0ff')
-        eyeG2.addColorStop(1, '#00aadd')
-        ctx.fillStyle = eyeG2
-        ctx.beginPath()
-        ctx.ellipse(14 * S, hy, 5.5 * S, 3.2 * S, 0, 0, Math.PI * 2)
-        ctx.fill()
+        // Advanced Lens Projector Eyes
+        const drawEye = (ex) => {
+          // Lens housing ring
+          ctx.strokeStyle = 'rgba(100, 130, 160, 0.6)'
+          ctx.lineWidth = 0.8 * S
+          ctx.beginPath()
+          ctx.ellipse(ex, hy, 6.2 * S, 4.2 * S, 0, 0, Math.PI * 2)
+          ctx.stroke()
 
-        // Eye pupil reflections
-        ctx.shadowBlur = 0
-        ctx.fillStyle = 'rgba(255,255,255,0.5)'
-        ctx.beginPath()
-        ctx.ellipse(-15.5 * S, hy - 1.2 * S, 2 * S, 1.2 * S, -0.3, 0, Math.PI * 2)
-        ctx.ellipse(12.5 * S, hy - 1.2 * S, 2 * S, 1.2 * S, -0.3, 0, Math.PI * 2)
-        ctx.fill()
+          // Inner glowing lens iris
+          const eyeG = ctx.createRadialGradient(ex - 1.5 * S, hy - 1 * S, 0, ex, hy, 5 * S)
+          eyeG.addColorStop(0, '#ffffff')
+          eyeG.addColorStop(0.25, '#9bf6ff')
+          eyeG.addColorStop(0.55, '#00dfff')
+          eyeG.addColorStop(0.85, '#007cdb')
+          eyeG.addColorStop(1, '#003a8a')
+          ctx.fillStyle = eyeG
+          ctx.shadowBlur = 12; ctx.shadowColor = '#00f0ff'
+          ctx.beginPath()
+          ctx.ellipse(ex, hy, 5.5 * S, 3.2 * S, 0, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.shadowBlur = 0
+
+          // Pupil reflection glint
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.65)'
+          ctx.beginPath()
+          ctx.ellipse(ex - 1.5 * S, hy - 1 * S, 1.5 * S, 0.8 * S, -0.3, 0, Math.PI * 2)
+          ctx.fill()
+        }
+        drawEye(-14 * S)
+        drawEye(14 * S)
       }
       ctx.shadowBlur = 0
+      ctx.restore()
+    }
+
+    // ─── Draw Shoulder Socket Helper ────────────────────────────────────
+    const drawShoulderSocket = (side, tx, ty) => {
+      ctx.save()
+      ctx.translate(tx, ty)
+      // Recess shadow
+      ctx.fillStyle = 'rgba(8, 12, 20, 0.82)'
+      ctx.beginPath()
+      ctx.arc(0, 0, 8 * S, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)'
+      ctx.lineWidth = 1 * S
+      ctx.stroke()
+
+      // Sphere ball joint
+      const ballG = ctx.createRadialGradient(-2 * S * side, -2 * S, 0, 0, 0, 6 * S)
+      ballG.addColorStop(0, '#ffffff')
+      ballG.addColorStop(0.25, '#c5d8ea')
+      ballG.addColorStop(0.75, '#6a82a0')
+      ballG.addColorStop(1, '#324254')
+      ctx.fillStyle = ballG
+      ctx.beginPath()
+      ctx.arc(0, 0, 5.5 * S, 0, Math.PI * 2)
+      ctx.fill()
       ctx.restore()
     }
 
@@ -319,71 +398,126 @@ export default function SectionRobot({ action = 'coffee' }) {
       ctx.save()
       ctx.scale(scaleX, scaleY)
 
+      // 1. Thruster Nozzle & Flame
+      // Nozzle dark metallic structure
+      const nG = ctx.createLinearGradient(-10 * S, 20 * S, 10 * S, 26 * S)
+      nG.addColorStop(0, '#2b3545')
+      nG.addColorStop(0.5, '#506075')
+      nG.addColorStop(1, '#18202b')
+      ctx.fillStyle = nG
+      ctx.beginPath()
+      ctx.moveTo(-10 * S, 24 * S)
+      ctx.lineTo(-7 * S, 28 * S)
+      ctx.lineTo(7 * S, 28 * S)
+      ctx.lineTo(10 * S, 24 * S)
+      ctx.closePath()
+      ctx.fill()
+
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.75)'
+      ctx.shadowBlur = 6; ctx.shadowColor = '#00f0ff'
+      ctx.lineWidth = 1.5 * S
+      ctx.beginPath()
+      ctx.moveTo(-7 * S, 28 * S)
+      ctx.lineTo(7 * S, 28 * S)
+      ctx.stroke()
+      ctx.shadowBlur = 0
+
       // Thruster flame flicker
       const flameH = (6 + Math.sin(time * 0.45) * 2.5 + Math.random() * 1.5) * S
-      const fg = ctx.createLinearGradient(0, 26 * S, 0, 26 * S + flameH * 2.5)
-      fg.addColorStop(0, 'rgba(0,240,255,0.85)')
-      fg.addColorStop(0.35, 'rgba(100,0,255,0.5)')
+      const fg = ctx.createLinearGradient(0, 28 * S, 0, 28 * S + flameH * 2.5)
+      fg.addColorStop(0, 'rgba(0,240,255,0.95)')
+      fg.addColorStop(0.35, 'rgba(99,102,241,0.7)')
       fg.addColorStop(0.7, 'rgba(255,0,127,0.35)')
       fg.addColorStop(1, 'rgba(255,0,127,0)')
       ctx.fillStyle = fg
       ctx.beginPath()
-      ctx.moveTo(-5 * S, 26 * S)
-      ctx.quadraticCurveTo(0, 26 * S + flameH * 2, 5 * S, 26 * S)
+      ctx.moveTo(-5 * S, 28 * S)
+      ctx.quadraticCurveTo(0, 28 * S + flameH * 2, 5 * S, 28 * S)
       ctx.fill()
 
       // Secondary small flame
-      const fg2 = ctx.createLinearGradient(0, 26 * S, 0, 26 * S + flameH)
+      const fg2 = ctx.createLinearGradient(0, 28 * S, 0, 28 * S + flameH)
       fg2.addColorStop(0, 'rgba(0,240,255,0.6)')
       fg2.addColorStop(1, 'rgba(0,240,255,0)')
       ctx.fillStyle = fg2
       ctx.beginPath()
-      ctx.moveTo(-2.5 * S, 26 * S)
-      ctx.quadraticCurveTo(0, 26 * S + flameH * 1.4, 2.5 * S, 26 * S)
+      ctx.moveTo(-2.5 * S, 28 * S)
+      ctx.quadraticCurveTo(0, 28 * S + flameH * 1.4, 2.5 * S, 28 * S)
       ctx.fill()
 
-      // Body capsule — main
+      // 2. Main Torso Body
       ctx.fillStyle = metallicGrad(ctx, -8 * S, -8 * S, 4 * S, 0, 10 * S, 38 * S)
       ctx.beginPath()
       ctx.ellipse(0, 9 * S, 29 * S, 34 * S, 0, 0, Math.PI * 2)
       ctx.fill()
-
-      // Body rim light
       rimLight(ctx, 0, 9 * S, 29 * S, 34 * S)
 
-      // Body top highlight
+      // Ambient shadow under head
+      ctx.fillStyle = 'rgba(5, 8, 15, 0.3)'
+      ctx.beginPath()
+      ctx.ellipse(0, -22 * S, 24 * S, 5 * S, 0, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Panel split lines on torso
+      ctx.strokeStyle = 'rgba(8, 15, 28, 0.2)'
+      ctx.lineWidth = 1 * S
+      ctx.beginPath()
+      // vertical split
+      ctx.moveTo(0, -18 * S)
+      ctx.lineTo(0, -4 * S)
+      ctx.moveTo(0, 18 * S)
+      ctx.lineTo(0, 36 * S)
+      // horizontal seam
+      ctx.moveTo(-25 * S, 15 * S)
+      ctx.quadraticCurveTo(0, 18 * S, 25 * S, 15 * S)
+      ctx.stroke()
+
+      // Torso panel split highlights
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)'
+      ctx.beginPath()
+      ctx.moveTo(0.8 * S, -18 * S)
+      ctx.lineTo(0.8 * S, -4 * S)
+      ctx.moveTo(0.8 * S, 18 * S)
+      ctx.lineTo(0.8 * S, 36 * S)
+      ctx.moveTo(-25 * S, 15.8 * S)
+      ctx.quadraticCurveTo(0, 18.8 * S, 25 * S, 15.8 * S)
+      ctx.stroke()
+
+      // Specular top highlight
       const bH = ctx.createRadialGradient(-8 * S, -4 * S, 0, -4 * S, 2 * S, 22 * S)
-      bH.addColorStop(0, 'rgba(255,255,255,0.5)')
-      bH.addColorStop(0.5, 'rgba(255,255,255,0.15)')
+      bH.addColorStop(0, 'rgba(255,255,255,0.55)')
+      bH.addColorStop(0.5, 'rgba(255,255,255,0.18)')
       bH.addColorStop(1, 'rgba(255,255,255,0)')
       ctx.fillStyle = bH
       ctx.beginPath()
       ctx.ellipse(-4 * S, 0, 18 * S, 14 * S, -0.1, 0, Math.PI * 2)
       ctx.fill()
 
-      // Chest panel inset
-      ctx.fillStyle = 'rgba(5,15,35,0.92)'
+      // V-01 Decal
+      ctx.fillStyle = 'rgba(99, 102, 241, 0.3)'
+      ctx.font = `bold ${5 * S}px 'JetBrains Mono', monospace`
+      ctx.textAlign = 'right'
+      ctx.fillText('V-01', -14 * S, -9 * S)
+
+      // Shoulder Sockets
+      drawShoulderSocket(-1, -30 * S, 6 * S)
+      drawShoulderSocket(1, 30 * S, 6 * S)
+
+      // Chest panel screen bezel
+      ctx.strokeStyle = 'rgba(100, 130, 160, 0.4)'
+      ctx.lineWidth = 0.8 * S
       ctx.beginPath()
-      roundedRect(ctx, -18 * S, -2 * S, 36 * S, 22 * S, 5 * S)
-      ctx.fill()
-      ctx.strokeStyle = 'rgba(0,240,255,0.3)'
-      ctx.lineWidth = 0.8
-      ctx.beginPath()
-      roundedRect(ctx, -18 * S, -2 * S, 36 * S, 22 * S, 5 * S)
+      roundedRect(ctx, -19 * S, -3 * S, 38 * S, 24 * S, 6 * S)
       ctx.stroke()
 
-      // Chest panel glow strip
-      glowPulse = (Math.sin(time * 0.04) + 1) / 2
-      const cpG = ctx.createLinearGradient(-18 * S, 0, 18 * S, 0)
-      cpG.addColorStop(0, `rgba(0,240,255,${0.08 + glowPulse * 0.07})`)
-      cpG.addColorStop(0.5, `rgba(0,240,255,${0.18 + glowPulse * 0.12})`)
-      cpG.addColorStop(1, `rgba(0,240,255,${0.08 + glowPulse * 0.07})`)
-      ctx.fillStyle = cpG
+      // Chest display screen dark glass
+      ctx.fillStyle = 'rgba(3,10,24,0.95)'
       ctx.beginPath()
       roundedRect(ctx, -18 * S, -2 * S, 36 * S, 22 * S, 5 * S)
       ctx.fill()
 
-      // ECG line on chest
+      // ECG Heart line
+      glowPulse = (Math.sin(time * 0.045) + 1) / 2
       ctx.strokeStyle = `rgba(0,240,255,${0.6 + glowPulse * 0.35})`
       ctx.shadowBlur = 5; ctx.shadowColor = '#00f0ff'
       ctx.lineWidth = 1.5
@@ -398,15 +532,6 @@ export default function SectionRobot({ action = 'coffee' }) {
       ctx.stroke()
       ctx.shadowBlur = 0
 
-      // Body bottom reflection
-      const botRef = ctx.createLinearGradient(0, 28 * S, 0, 40 * S)
-      botRef.addColorStop(0, 'rgba(0,240,255,0.08)')
-      botRef.addColorStop(1, 'rgba(0,240,255,0)')
-      ctx.fillStyle = botRef
-      ctx.beginPath()
-      ctx.ellipse(0, 30 * S, 20 * S, 10 * S, 0, 0, Math.PI * 2)
-      ctx.fill()
-
       ctx.restore()
     }
 
@@ -415,16 +540,24 @@ export default function SectionRobot({ action = 'coffee' }) {
       ctx.save()
       ctx.translate(tx, ty)
       ctx.rotate(angle)
+
+      // Drop shadow behind arm
+      ctx.fillStyle = 'rgba(5, 8, 15, 0.25)'
+      ctx.beginPath()
+      ctx.ellipse(2 * side * S, 3 * S, 6 * S, 17 * S, 0, 0, Math.PI * 2)
+      ctx.fill()
+
       const ag = ctx.createRadialGradient(side < 0 ? 3 * S : -3 * S, -10 * S, 1 * S, 0, 0, 18 * S)
       ag.addColorStop(0, '#ffffff')
-      ag.addColorStop(0.4, '#e8f0f8')
-      ag.addColorStop(0.8, '#c5d4e8')
-      ag.addColorStop(1, '#8fa8c8')
+      ag.addColorStop(0.25, '#e8f0f8')
+      ag.addColorStop(0.70, '#a2b8d4')
+      ag.addColorStop(0.85, '#7b95b8')
+      ag.addColorStop(1, '#536d8f')
       ctx.fillStyle = ag
       ctx.beginPath()
       ctx.ellipse(0, 0, 6 * S, 17 * S, 0, 0, Math.PI * 2)
       ctx.fill()
-      rimLight(ctx, 0, 0, 6 * S, 17 * S, 'rgba(0,240,255,0.12)')
+      rimLight(ctx, 0, 0, 6 * S, 17 * S, 'rgba(0,240,255,0.15)')
 
       // Arm specular
       const aSpec = ctx.createRadialGradient(side < 0 ? 2 * S : -2 * S, -8 * S, 0, 0, -4 * S, 8 * S)

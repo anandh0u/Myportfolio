@@ -1350,11 +1350,11 @@
 }
 
 .welcome-board-wrapper.collapsing {
-  top: 68%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0);
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
+  transform: translate(-50%, -50%) scale(0.92);
+  transition: opacity 0.05s ease, transform 0.05s ease;
 }
 
 .welcome-board-card {
