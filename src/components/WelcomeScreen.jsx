@@ -438,6 +438,11 @@ export default function WelcomeScreen({ onEnter }) {
         const rx = x + (robot.swayX || 0)
         const ry = y
 
+        // ── Drawing greeting board on canvas (drawn in background) ───
+        if (board.state !== 'hidden') {
+          drawBoardOnCanvas(ctx, board)
+        }
+
         // ── Ground Shadow ────────────────────────────────────────────
         const distToFloor = Math.max(0, robot.floorY - ry)
         const sSc = Math.max(0.1, Math.min(1, 1 - distToFloor / 480))
@@ -870,11 +875,6 @@ export default function WelcomeScreen({ onEnter }) {
         }
 
         ctx.restore() // restore from body translate/scale
-
-        // ── Drawing greeting board on canvas ───────────────────────────
-        if (board.state !== 'hidden') {
-          drawBoardOnCanvas(ctx, board)
-        }
 
         // ── Speech Bubble (drawn on top of everything) ──────────────────
         if (robot.showBubble) {

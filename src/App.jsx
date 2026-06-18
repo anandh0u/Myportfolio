@@ -611,15 +611,51 @@ export default function App() {
           <div className="contact-content">
             <p>I am open to discussions regarding internship collaborations, robotic system designs, AI implementations, or sensor integrations. Drop a line to start a dialogue.</p>
             
-            <div className="contact-details" style={{ margin: '30px auto', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', fontFamily: 'JetBrains Mono', fontSize: '13px' }}>
-              <div><span style={{ color: 'var(--accent)' }}>primary_email //</span> <a id="email-primary" href="mailto:anandhupulikkl22@gmail.com">anandhupulikkl22@gmail.com</a></div>
-              <div><span style={{ color: 'var(--accent)' }}>academic_email //</span> <a id="email-academic" href="mailto:24b771.anandhu@gectcr.ac.in">24b771.anandhu@gectcr.ac.in</a></div>
-              <div><span style={{ color: 'var(--accent)' }}>alternate_email //</span> <a id="email-alternate" href="mailto:anandhup167@gmail.com">anandhup167@gmail.com</a></div>
-            </div>
+            <div className="contact-grid">
+              <a id="email-primary" href="mailto:anandhupulikkl22@gmail.com" className="contact-card">
+                <div className="contact-card-glow"></div>
+                <div className="contact-card-content">
+                  <div className="contact-icon">// primary</div>
+                  <h3 className="contact-title">Primary Email</h3>
+                  <p className="contact-value">anandhupulikkl22@gmail.com</p>
+                </div>
+              </a>
 
-            <div className="social-links">
-              <a id="social-github" href="https://github.com/anandh0u" target="_blank" rel="noopener noreferrer" className="social-link">github</a>
-              <a id="social-linkedin" href="https://www.linkedin.com/in/anandhu-p-6ba98231a/" target="_blank" rel="noopener noreferrer" className="social-link">linkedin</a>
+              <a id="email-academic" href="mailto:24b771.anandhu@gectcr.ac.in" className="contact-card">
+                <div className="contact-card-glow"></div>
+                <div className="contact-card-content">
+                  <div className="contact-icon">// academic</div>
+                  <h3 className="contact-title">Academic Email</h3>
+                  <p className="contact-value">24b771.anandhu@gectcr.ac.in</p>
+                </div>
+              </a>
+
+              <a id="email-alternate" href="mailto:anandhup167@gmail.com" className="contact-card">
+                <div className="contact-card-glow"></div>
+                <div className="contact-card-content">
+                  <div className="contact-icon">// alternate</div>
+                  <h3 className="contact-title">Alternate Email</h3>
+                  <p className="contact-value">anandhup167@gmail.com</p>
+                </div>
+              </a>
+
+              <a id="social-github" href="https://github.com/anandh0u" target="_blank" rel="noopener noreferrer" className="contact-card">
+                <div className="contact-card-glow"></div>
+                <div className="contact-card-content">
+                  <div className="contact-icon">// source_code</div>
+                  <h3 className="contact-title">GitHub</h3>
+                  <p className="contact-value">github.com/anandh0u</p>
+                </div>
+              </a>
+
+              <a id="social-linkedin" href="https://www.linkedin.com/in/anandhu-p-6ba98231a/" target="_blank" rel="noopener noreferrer" className="contact-card">
+                <div className="contact-card-glow"></div>
+                <div className="contact-card-content">
+                  <div className="contact-icon">// network</div>
+                  <h3 className="contact-title">LinkedIn</h3>
+                  <p className="contact-value">linkedin.com/in/anandhu-p</p>
+                </div>
+              </a>
             </div>
           </div>
         </div>
